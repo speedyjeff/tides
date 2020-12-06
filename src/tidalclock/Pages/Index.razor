@@ -10,8 +10,6 @@
     <BECanvas Width="1280" Height="800" @ref="_canvasReference"></BECanvas>
 </div>
 
-<!-- todo add a translation canvas to paint to specific portions of the screen -->
-
 @code
 {
     private Canvas2DContext _context = null;
@@ -37,6 +35,9 @@
             await _context.FillRectAsync(x: 0, y: 0, _canvasReference.Width, _canvasReference.Height);
         }
 
+        var wratio = ((float)_canvasReference.Width / (float)1024);
+        var hratio = ((float)_canvasReference.Height / (float)600);
+
         // init external data
         if (External == null) External = new Predictions("La Push, WA", noahStationId: 9442396, lat: 47.9133f, lng: -124.6369f, lookaheadhours: 24);
 
@@ -44,19 +45,19 @@
         if (Canvas == null) Canvas = new BlazorCanvas(_context, _canvasReference.Width, _canvasReference.Height);
 
         // digital clock
-        if (DigitalClockCanvas == null) DigitalClockCanvas = new RegionBlazorCanvas(Canvas, new Point() { X = ((524f / 2f) - (100f / 2f)), Y = 524f + 5f }, regionwidth: 100, regionheight: 50);
+        if (DigitalClockCanvas == null) DigitalClockCanvas = new RegionBlazorCanvas(Canvas, new Point() { X = ((524f / 2f) - (100f / 2f)) * wratio, Y = (524f + 5f) * hratio }, regionwidth: (long)(100 * wratio), regionheight: (long)(50 * hratio));
         if (DigitalClock == null) DigitalClock = new DigitalClock(DigitalClockCanvas, digitalclockface: true);
 
         // weather
-        if (WeatherCanvas == null) WeatherCanvas = new RegionBlazorCanvas(Canvas, new Point() { X = 524, Y = 524 }, regionwidth: 500, regionheight: 200);
+        if (WeatherCanvas == null) WeatherCanvas = new RegionBlazorCanvas(Canvas, new Point() { X = 524 * wratio, Y = 400 * hratio }, regionwidth: (long)(500 * wratio), regionheight: (long)(200 * hratio));
         if (Weather == null) Weather = new WeatherList(WeatherCanvas, External);
 
         // details
-        if (DetailCanvas == null) DetailCanvas = new RegionBlazorCanvas(Canvas, new Point() { X = 524, Y = 0 }, regionwidth: 500, regionheight: 524);
+        if (DetailCanvas == null) DetailCanvas = new RegionBlazorCanvas(Canvas, new Point() { X = 524 * wratio, Y = 0 }, regionwidth: (long)(500 * wratio), regionheight: (long)(400 * hratio));
         if (Detail == null) Detail = new DetailList(DetailCanvas, External);
 
         // tide clock
-        if (TideClockCanvas == null) TideClockCanvas = new RegionBlazorCanvas(Canvas, new Point() { X = 0, Y = 0 }, regionwidth: 524, regionheight: 524);
+        if (TideClockCanvas == null) TideClockCanvas = new RegionBlazorCanvas(Canvas, new Point() { X = 0, Y = 0 }, regionwidth: (long)(524 * wratio), regionheight: (long)(524 * hratio));
         if (TideClock == null) TideClock = new TideClock(TideClockCanvas, External);
     }
 }

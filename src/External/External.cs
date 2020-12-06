@@ -464,7 +464,6 @@ namespace External
 			{
 				try
 				{
-
 					// create request object
 					using (var httpClient = new HttpClient())
 					{
