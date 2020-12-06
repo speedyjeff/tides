@@ -40,7 +40,7 @@ namespace Clockface
 		private static RGBA HighlightLowColor = new RGBA() { A = 255, R = 133, G = 133, B = 133 };
 		private static RGBA SpokeColor = new RGBA() { A = 255, R = 100, G = 100, B = 100 };
 
-		private void FrameUpdate(object state)
+		private async void FrameUpdate(object state)
 		{
 			if (Canvas == null) throw new Exception("must have a valid canvas to draw too");
 
@@ -48,9 +48,9 @@ namespace Clockface
 			if (System.Threading.Interlocked.CompareExchange(ref FrameLock, 1, 0) != 0) return;
 
 			// grab predictions
-			var tides = Prediction.CurrentTides;
+			var tides = await Prediction.CurrentTides();
 			if (tides == null || tides.Count == 0) throw new Exception("failed to get tide information");
-			var suns = Prediction.CurrentSuns;
+			var suns = await Prediction.CurrentSuns();
 			if (suns == null || suns.Count == 0) throw new Exception("failed to get sunrise/sunset information");
 
 			try
@@ -71,7 +71,7 @@ namespace Clockface
 				var ringthickness = 1f * Ratio;
 				var innerradius = dimension / 20f;
 				var outerradius = ((1f * dimension) / 3f) + innerradius + ringthickness;
-				Canvas.Ellipse(RGBA.White, center, width: 2 * outerradius, height: 2 * outerradius, fill: false, border: true, ringthickness);
+				Canvas.Ellipse(RGBA.White, center, width: 2 * outerradius, height: 2 * outerradius, fill: false, border: false, ringthickness);
 
 				// clock numbers
 				for (int i = 1; i <= 24; i++)
@@ -80,7 +80,7 @@ namespace Clockface
 
 					// draw line
 					CalculateLineByAngle(center.X, center.Y, angle, outerradius, out points[0].X, out points[0].Y, out points[1].X, out points[1].Y);
-					Canvas.Polygon(RGBA.White, points, fill: false, border: true, thickness: 1f * Ratio);
+					Canvas.Polygon(RGBA.White, points, fill: false, border: false, thickness: 1f * Ratio);
 
 					// draw number
 					CalculateLineByAngle(center.X, center.Y, angle, outerradius + (25f * Ratio), out points[0].X, out points[0].Y, out points[1].X, out points[1].Y);

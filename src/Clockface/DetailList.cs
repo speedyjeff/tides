@@ -42,7 +42,7 @@ namespace Clockface
 			public float HighValue;
         }
 
-        private void FrameUpdate(object state)
+        private async void FrameUpdate(object state)
 		{
 			if (Canvas == null) throw new Exception("must have a valid canvas to draw too");
 
@@ -50,9 +50,9 @@ namespace Clockface
 			if (System.Threading.Interlocked.CompareExchange(ref FrameLock, 1, 0) != 0) return;
 
 			// grab predictions
-			var extremes = Prediction.CurrentExtremes;
+			var extremes = await Prediction.CurrentExtremes();
 			if (extremes == null || extremes.Count == 0) throw new Exception("failed to get tide information");
-			var suns = Prediction.CurrentSuns;
+			var suns = await Prediction.CurrentSuns();
 			if (suns == null || suns.Count == 0) throw new Exception("failed to get sunrise/sunset information");
 
 			// gather the tide extreme data

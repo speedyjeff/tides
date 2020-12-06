@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "External", "External\Extern
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Clockface", "Clockface\Clockface.csproj", "{761EAAEA-77AC-4493-A38A-21AA31084891}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tidalclock", "tidalclock\tidalclock.csproj", "{44902605-3A08-4254-9411-2CC940A74EA4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{761EAAEA-77AC-4493-A38A-21AA31084891}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{761EAAEA-77AC-4493-A38A-21AA31084891}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{761EAAEA-77AC-4493-A38A-21AA31084891}.Release|Any CPU.Build.0 = Release|Any CPU
+		{44902605-3A08-4254-9411-2CC940A74EA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44902605-3A08-4254-9411-2CC940A74EA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{44902605-3A08-4254-9411-2CC940A74EA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44902605-3A08-4254-9411-2CC940A74EA4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

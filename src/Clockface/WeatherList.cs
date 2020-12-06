@@ -33,7 +33,7 @@ namespace Clockface
 		private int FrameLock = 0;
 		private float Ratio;
 
-		private void FrameUpdate(object state)
+		private async void FrameUpdate(object state)
 		{
 			if (Canvas == null) throw new Exception("must have a valid canvas to draw too");
 
@@ -41,7 +41,7 @@ namespace Clockface
 			if (System.Threading.Interlocked.CompareExchange(ref FrameLock, 1, 0) != 0) return;
 
 			// grab predictions
-			var weather = Prediction.CurrentWeather;
+			var weather = await Prediction.CurrentWeather();
 			if (weather == null || weather.Count == 0) throw new Exception("failed to get weather information");
 
 			try
@@ -53,7 +53,6 @@ namespace Clockface
 
 				var rowheight = 26f * Ratio;
 				var fontsize = 16f * Ratio;
-				var margin = 0f;
 				var fontname = "Courier New";
 				var point = new Point() { X = 0f, Y = 0f };
 

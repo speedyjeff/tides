@@ -15,7 +15,7 @@ namespace Clockface
 			// init
 			Canvas = canvas;
 			UseDigitalClockFace = digitalclockface;
-			Ratio = Canvas.Width / 200f; // 150 was the reference px
+			Ratio = Canvas.Width / 200f; // 200 was the reference px
 
 			// create timer
 			FrameTimer = new Timer(FrameUpdate, null, 0, 100);
@@ -79,7 +79,7 @@ namespace Clockface
 					new Point() {X = Canvas.Width, Y = Canvas.Height},
 					new Point() {X = 0, Y = Canvas.Height}
 				};
-				Canvas.Polygon(RGBA.White, quad, fill: false, border: true, thickness: 2f * Ratio);
+				Canvas.Polygon(RGBA.White, quad, fill: false, border: false, thickness: 2f * Ratio);
 			}
 			finally
             {
@@ -109,25 +109,25 @@ namespace Clockface
 			var elementdepth = (halfwidth / 3f);
 			var thickness = 1f * Ratio;
 
-			// 0 ---- 1
+			// 0 ---- 3
 			// -      -
 			// -      -
-			// 3 ---- 2
+			// 1 ---- 2
 			if (chr == ':')
 			{
 				// narrow
-				quad[0].X = quad[3].X = center.X - (elementdepth/2f);
-				quad[1].X = quad[2].X = center.X + (elementdepth/2f);
+				quad[0].X = quad[1].X = center.X - (elementdepth / 2f);
+				quad[2].X = quad[3].X = center.X + (elementdepth / 2f);
 
 				// top
-				quad[0].Y = quad[1].Y = center.Y - (halfheight / 4f);
-				quad[2].Y = quad[3].Y = center.Y - (halfheight / 4f) + elementdepth;
+				quad[0].Y = quad[3].Y = center.Y - (halfheight / 4f);
+				quad[1].Y = quad[2].Y = center.Y - (halfheight / 4f) + elementdepth;
 
 				canvas.Polygon(RGBA.White, quad, fill: true, border: true, thickness);
 
 				// bottom
-				quad[0].Y = quad[1].Y = center.Y + (halfheight / 4f) - elementdepth;
-				quad[2].Y = quad[3].Y = center.Y + (halfheight / 4f);
+				quad[0].Y = quad[3].Y = center.Y + (halfheight / 4f) - elementdepth;
+				quad[1].Y = quad[2].Y = center.Y + (halfheight / 4f);
 
 				canvas.Polygon(RGBA.White, quad, fill: true, border: true, thickness);
 			}
@@ -136,7 +136,7 @@ namespace Clockface
 				// right top
 				if (chr != '5' && chr != '6')
 				{
-					quad[0].X = quad[3].X = center.X + (halfwidth-elementdepth);
+					quad[0].X = quad[3].X = center.X + (halfwidth - elementdepth);
 					quad[1].X = quad[2].X = center.X + (halfwidth);
 
 					quad[0].Y = center.Y - (halfheight - elementdepth);
@@ -199,7 +199,7 @@ namespace Clockface
 					quad[3].X = center.X - (halfwidth - elementdepth);
 
 					quad[0].Y = quad[1].Y = center.Y - (halfheight);
-					quad[2].Y = quad[3].Y = center.Y - (halfheight-elementdepth);
+					quad[2].Y = quad[3].Y = center.Y - (halfheight - elementdepth);
 
 					canvas.Polygon(RGBA.White, quad, fill: true, border: true, thickness);
 				}
@@ -209,19 +209,19 @@ namespace Clockface
 				{
 					var six = new Point[6];
 
-					six[0].X = center.X + halfwidth;
-					six[1].X = center.X + (halfwidth - elementdepth);
-					six[2].X = center.X - (halfwidth - elementdepth);
-					six[3].X = center.X - halfwidth;
-					six[4].X = center.X - (halfwidth - elementdepth);
-					six[5].X = center.X + (halfwidth - elementdepth);
+					six[0].X = center.X - halfwidth;
+					six[1].X = center.X - (halfwidth - elementdepth);
+					six[2].X = center.X + (halfwidth - elementdepth);
+					six[3].X = center.X + halfwidth;
+					six[4].X = center.X + (halfwidth - elementdepth);
+					six[5].X = center.X - (halfwidth - elementdepth);
 
 					six[0].Y = center.Y;
-					six[1].Y = center.Y - elementdepth;
-					six[2].Y = center.Y - elementdepth;
+					six[1].Y = center.Y + elementdepth;
+					six[2].Y = center.Y + elementdepth;
 					six[3].Y = center.Y;
-					six[4].Y = center.Y + elementdepth;
-					six[5].Y = center.Y + elementdepth;
+					six[4].Y = center.Y - elementdepth;
+					six[5].Y = center.Y - elementdepth;
 
 					canvas.Polygon(RGBA.White, six, fill: true, border: true, thickness);
 				}
