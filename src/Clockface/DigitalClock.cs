@@ -6,6 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Utilities;
 
+// todo pm indicator
+
 namespace Clockface
 {
     public class DigitalClock
@@ -46,6 +48,7 @@ namespace Clockface
 
 				if (UseDigitalClockFace)
 				{
+					// 8 chars make up a clock - plus room on the side
 					var width = Canvas.Width / 9f;
 					var height = (Canvas.Height * 3f) / 4f;
 					var center = new Point() { X = width, Y = Canvas.Height / 2f };
@@ -71,7 +74,7 @@ namespace Clockface
 					Canvas.Text(RGBA.White, center, $"{now:hh:mm:ss}", fontsize, fontname);
                 }
 
-				// todo pm indicator
+				// outer edge
 				var quad = new Point[]
 				{
 					new Point() {X = 0, Y = 0},
@@ -105,6 +108,9 @@ namespace Clockface
 
 		private void DrawCharacter(ICanvas canvas, Point center, float halfwidth, float halfheight, char chr)
         {
+			// reduce halfwidth to leave space
+			halfwidth *= 0.75f;
+
 			var quad = new Point[4];
 			var elementdepth = (halfwidth / 3f);
 			var thickness = 1f * Ratio;

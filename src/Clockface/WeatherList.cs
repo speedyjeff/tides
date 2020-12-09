@@ -42,7 +42,6 @@ namespace Clockface
 
 			// grab predictions
 			var weather = await Prediction.CurrentWeather();
-			if (weather == null || weather.Count == 0) throw new Exception("failed to get weather information");
 
 			try
 			{
@@ -56,6 +55,7 @@ namespace Clockface
 				var fontname = "Courier New";
 				var point = new Point() { X = 0f, Y = 0f };
 
+				point.Y = (rowheight * 1);
 				Canvas.Text(RGBA.White, point, "Local weather", fontsize, fontname);
 
 				foreach (var w in weather)
@@ -64,38 +64,45 @@ namespace Clockface
                     {
 						case "temperature":
 							point.X = 0f;
-							point.Y = rowheight;
+							point.Y = (rowheight * 2);
 							Canvas.Text(RGBA.White, point, $"current: {w.Value}°", fontsize, fontname);
 							break;
 						case "temperaturetrend":
 							point.X = (rowheight * 6);
-							point.Y = (rowheight * 1);
+							point.Y = (rowheight * 2);
 							Canvas.Text(RGBA.White, point, $"[{w.StrValue.ToLower()}]", fontsize, fontname);
 							break;
 						case "temperaturelow":
 							point.X = 0f;
-							point.Y = (rowheight * 2);
+							point.Y = (rowheight * 3);
 							Canvas.Text(RGBA.White, point, $"low:     {w.Value}°", fontsize, fontname);
 							break;
 						case "temperaturehigh":
 							point.X = 0f;
-							point.Y = (rowheight * 3);
+							point.Y = (rowheight * 4);
 							Canvas.Text(RGBA.White, point, $"high:    {w.Value}°", fontsize, fontname);
 							break;
 						case "winddirection":
 							point.X = 0f;
-							point.Y = (rowheight * 4);
+							point.Y = (rowheight * 5);
 							Canvas.Text(RGBA.White, point, $"wind:    {w.StrValue}", fontsize, fontname);
 							break;
 						case "windspeed":
-							point.X = (rowheight * 7);
-							point.Y = (rowheight * 4);
+							point.X = (rowheight * 5);
+							point.Y = (rowheight * 5);
 							Canvas.Text(RGBA.White, point, $"{w.StrValue.ToLower()}", fontsize, fontname);
 							break;
 						case "shortforecast":
 							point.X = 0f;
-							point.Y = (rowheight * 5);
+							point.Y = (rowheight * 6);
 							Canvas.Text(RGBA.White, point, $"{w.StrValue}", fontsize, fontname);
+							// debug
+							if (true)
+							{
+								point.X = 0f;
+								point.Y = (rowheight * 7);
+								Canvas.Text(RGBA.White, point, $"{w.Date.ToLocalTime():yyyy/MM/dd hh:mm}", fontsize * 0.5f, fontname);
+							}
 							break;
                     }
                 }

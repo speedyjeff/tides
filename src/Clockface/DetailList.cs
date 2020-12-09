@@ -51,9 +51,7 @@ namespace Clockface
 
 			// grab predictions
 			var extremes = await Prediction.CurrentExtremes();
-			if (extremes == null || extremes.Count == 0) throw new Exception("failed to get tide information");
 			var suns = await Prediction.CurrentSuns();
-			if (suns == null || suns.Count == 0) throw new Exception("failed to get sunrise/sunset information");
 
 			// gather the tide extreme data
 			var extremedetails = new List<ExtremeDetails>();

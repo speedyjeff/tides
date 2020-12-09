@@ -49,9 +49,7 @@ namespace Clockface
 
 			// grab predictions
 			var tides = await Prediction.CurrentTides();
-			if (tides == null || tides.Count == 0) throw new Exception("failed to get tide information");
 			var suns = await Prediction.CurrentSuns();
-			if (suns == null || suns.Count == 0) throw new Exception("failed to get sunrise/sunset information");
 
 			try
 			{
@@ -70,7 +68,7 @@ namespace Clockface
 				// outer ring
 				var ringthickness = 1f * Ratio;
 				var innerradius = dimension / 20f;
-				var outerradius = ((1f * dimension) / 3f) + innerradius + ringthickness;
+				var outerradius = (dimension * 0.37f) + innerradius + ringthickness;
 				Canvas.Ellipse(RGBA.White, center, width: 2 * outerradius, height: 2 * outerradius, fill: false, border: false, ringthickness);
 
 				// clock numbers

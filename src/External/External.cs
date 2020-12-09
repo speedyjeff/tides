@@ -10,8 +10,6 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-// todo make resilent to network failures
-
 namespace External
 {
 	public struct Data
@@ -405,8 +403,22 @@ namespace External
 				// query for results
 				if (latest == default(DateTime) || datetimewindow > latest)
 				{
+					// this call likely involves a network call, which may fail
+					// in order to be resilent to network failures, in that case 
+					// no data is returned
+					List<string> latestjson = null;
+					try
+					{
+						latestjson = await retrieveAdditional(past, future);
+					}
+					catch(Exception e)
+                    {
+						Console.WriteLine($"Catastrophic failure - {e}");
+						return new List<Data>();
+                    }
+
 					// query for more results
-					foreach (var json in await retrieveAdditional(past, future))
+					foreach (var json in latestjson)
 					{
 						var data = ParseJson(json, type);
 
@@ -437,7 +449,8 @@ namespace External
 					}
 				}
 
-				if (--tries == 0) throw new Exception("Failed to get sufficient tide results");
+				// we failed to successfully get data, return none
+				if (--tries == 0) return new List<Data>();
 			}
 			while (results.Count == 0);
 
@@ -455,7 +468,7 @@ namespace External
 		{
 			if (string.IsNullOrWhiteSpace(url)) throw new Exception("Must pass in valid url");
 
-			Console.WriteLine($"Querying {url}...");
+			Console.WriteLine($"{DateTime.UtcNow:O} Querying {url}...");
 
 			if (OnQuery != null) OnQuery();
 
@@ -480,13 +493,13 @@ namespace External
 						}
 					}
 				}
-				catch(System.Net.WebException e)
+				catch(System.Exception e)
 				{
 					Console.WriteLine(e);
 				}
 
 				// pause and retry
-				System.Threading.Thread.Sleep(5000);
+				System.Threading.Thread.Sleep(100);
 			}
 
 			throw new Exception("Failed to retrieve text");
