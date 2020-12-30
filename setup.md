@@ -14,37 +14,35 @@
   * choose lubuntu-desktop
   * (hint) wifi - /etc/netplan/50-cloud-init.yaml
 
-  * Enable firewall
+* Enable firewall
 ```
 sh> sudo ufw enable
 sh> sudo ufw allow ssh
 sh> sudo ufw allow ftp
 ```
 
-  * Enable ftp
+* Enable ftp
 https://www.osradar.com/how-to-set-up-an-ftp-server-ubuntu-20-04/
 ```
 sh> sudo systemctl restart vsftpd
 sh> sudo systemctl status vsftpd
 ```
 
-  * Setup Tides Directory
+* Setup Tides Directory
 ```
 sh> mkdir /home/tides
 sh> sudo chown <ftp user>: tides
 ```
+* Install Firefox Add-ons
+  * (CORS Everywhere)[https://addons.mozilla.org/en-US/firefox/addon/cors-everywhere]
+    * Preferences - Enabled on Startup 'On'
+  * (ForceFull)[https://addons.mozilla.org/en-US/firefox/addon/forcefull]
 
-  * Install Firefox Add-ons
-    * (CORS Everywhere)[https://addons.mozilla.org/en-US/firefox/addon/cors-everywhere]
-      * Preferences - Enabled on Startup 'On'
-    * (ForceFull)[https://addons.mozilla.org/en-US/firefox/addon/forcefull]
-
-Machine configuration
-Create ftp user
-Settings -> Power 
-  Blank screen = never
-  Automatic Suspend = off
-Settings -> Notifications -> Do not distrub
+* Create ftp user
+* Settings -> Power 
+  * Blank screen = never
+  * Automatic Suspend = off
+* Settings -> Notifications -> Do not distrub
 
 ### Update Tidal Clock
 
