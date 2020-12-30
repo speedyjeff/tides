@@ -6,6 +6,9 @@
 * [10 inch screen ($140)](https://www.amazon.com/Raspberry-Screen-10-1-IPS-SunFounder/dp/B07FZZ95WN)
 * [Tidal Clock (software)](https://github.com/speedyjeff/tides)
 
+![front](https://github.com/speedyjeff/tides/blob/master/media/front.png) 
+![back](https://github.com/speedyjeff/tides/blob/master/media/back.png) 
+
 ## Setup
 
 ### One Time Setup
@@ -47,9 +50,9 @@ sh> mkdir /home/tides
 * [Http file server](https://github.com/speedyjeff/directoryserver)
   * Publish as 'Release + linux-arm32 + self-contained + trimmed + single file'
 ```
-ftp> put <local dir>\directoryserver\directoryserver\bin\Release\net5.0\publish\directoryserver /home/<ftp user>/directoryserver
+ftp> put <local dir>\directoryserver\directoryserver\bin\Release\net5.0\publish\directoryserver directoryserver
 sh> cd /home/tides
-sh> cp /home/<ftp user/directoryserver /home/tides/directoryserver
+sh> cp /home/<ftp user>/directoryserver /home/tides/directoryserver
 sh> chmod +x directoryserver
 ```
 
@@ -58,15 +61,14 @@ sh> chmod +x directoryserver
 ```
 cmd> cd src\tidalclock\bin\Release\net5.0\browser-wasm\publish
 cmd> tar -cf tidalclock.tar .
-ftp> put <local dir>\src\tidalclock\bin\Release\net5.0\browser-wasm\publish\tidalclock.tar /home/<ftp user>/tidalclock.tar
+ftp> put <local dir>\src\tidalclock\bin\Release\net5.0\browser-wasm\publish\tidalclock.tar tidalclock.tar
 sh> cd /home/tides
-sh> cp /home/<ftp user>/tidalclock.tar /home/tides/tidalclock.tar
-sh> sudo tar -xf tidalclock.tar
+sh> sudo tar -xf ../<ftp user>/tidalclock.tar .
 ```
 
 * Run tidal clock
 ```
 sh> cd /home/tides
-sh> ./directoryserver -port 8000 -dir wwwroot &
+sh> ./directoryserver -port 8000 -dir wwwroot/ &
 sh> firefox http://127.0.0.1:8000 &
 ```

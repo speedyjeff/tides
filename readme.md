@@ -6,3 +6,4 @@ This project is a rendering of that data in an easy to consume format.  The long
 
 ![tidal clock](https://github.com/speedyjeff/tides/blob/master/media/tidalclock.gif) 
 
+Here are a set of [setup steps](https://github.com/speedyjeff/tides/blob/master/setup.md) for how the project was put together.
