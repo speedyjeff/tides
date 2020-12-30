@@ -11,17 +11,18 @@ namespace Clockface
 {
 	public class TideClock
 	{
-		public TideClock(ICanvas canvas, Predictions external)
+		public TideClock(ICanvas canvas, Predictions external, bool lowresolution = false)
 		{
 			if (canvas == null || external == null) throw new Exception("must pass in valid canvas and predictions");
 
 			// init
 			Canvas = canvas;
 			Prediction = external;
+			LowResolution = lowresolution;
 			Ratio = Math.Min(Canvas.Width, Canvas.Height) / 524f; // 524 was the reference px
 
 			// create timer
-			FrameTimer = new Timer(FrameUpdate, null, 0, 1000);
+			FrameTimer = new Timer(FrameUpdate, null, 0, LowResolution ? 1000 : 50);
 		}
 
 		public event Action OnRendered;
@@ -33,7 +34,9 @@ namespace Clockface
 		private int FrameLock = 0;
 		private float Angle;
 		private float Ratio;
+		private bool LowResolution;
 
+		private static RGBA RingColor = new RGBA() { A = 175, R = 255, G = 255, B = 255 };
 		private static RGBA CurrentTimeColor = new RGBA() { A = 255, R = 255, G = 242, B = 0 };
 		private static RGBA HighlightHghColor = new RGBA() { A = 255, R = 220, G = 220, B = 220 };
 		private static RGBA HighlightMidColor = new RGBA() { A = 255, R = 166, G = 166, B = 166 };
@@ -51,25 +54,53 @@ namespace Clockface
 			var tides = await Prediction.CurrentTides();
 			var suns = await Prediction.CurrentSuns();
 
+			// locations
+			var dimension = Math.Min(Canvas.Width, Canvas.Height);
+			var center = new Point((dimension / 2f), (dimension / 2f), z: 0f);
+			var points = new Point[2];
+			var fontsize = 18f * Ratio;
+			var fontname = "Courier New";
+
+			// outer ring
+			var ringthickness = (float)Math.Round(0.25f * Ratio,1);
+			if (ringthickness < 1f) ringthickness = 1f;
+			var innerradius = dimension / 20f;
+			var outerradius = (dimension * 0.37f) + innerradius + ringthickness;
+			var tidelinethickness = (float)Math.Round(0.25f * Ratio,1);
+			if (tidelinethickness < 1f) tidelinethickness = 1f;
+
+			// get time
+			var now = DateTime.Now;
+			var later = now.AddHours(24);
+
+			// calculate the local min/max
+			var min = Single.MaxValue;
+			var max = Single.MinValue;
+			foreach (var tide in tides)
+			{
+				if (tide.Date >= now && tide.Date < later)
+				{
+					min = Math.Min(min, tide.Value);
+					max = Math.Max(max, tide.Value);
+				}
+			}
+
+			// adjust so that the min/max do not rest on the line
+			min -= (0.1f * Ratio);
+			max += (0.1f * Ratio);
+
+			// flip the sign of min to bring to 0
+			min *= -1;
+
 			try
 			{
-				Canvas.SuspendLayout();
-
-				// locations
-				var dimension = Math.Min(Canvas.Width, Canvas.Height);
-				var center = new Point((dimension / 2f), (dimension / 2f), z: 0f);
-				var points = new Point[2];
-				var fontsize = 18f * Ratio;
-				var fontname = "Courier New";
+				await Canvas.SuspendLayout();
 
 				// clear
 				Canvas.Clear(RGBA.Black);
 
 				// outer ring
-				var ringthickness = 1f * Ratio;
-				var innerradius = dimension / 20f;
-				var outerradius = (dimension * 0.37f) + innerradius + ringthickness;
-				Canvas.Ellipse(RGBA.White, center, width: 2 * outerradius, height: 2 * outerradius, fill: false, border: false, ringthickness);
+				Canvas.Ellipse(RingColor, center, width: 2 * outerradius, height: 2 * outerradius, fill: false, border: false, ringthickness);
 
 				// clock numbers
 				for (int i = 1; i <= 24; i++)
@@ -78,7 +109,7 @@ namespace Clockface
 
 					// draw line
 					CalculateLineByAngle(center.X, center.Y, angle, outerradius, out points[0].X, out points[0].Y, out points[1].X, out points[1].Y);
-					Canvas.Polygon(RGBA.White, points, fill: false, border: false, thickness: 1f * Ratio);
+					Canvas.Polygon(RingColor, points, fill: false, border: false, ringthickness);
 
 					// draw number
 					CalculateLineByAngle(center.X, center.Y, angle, outerradius + (25f * Ratio), out points[0].X, out points[0].Y, out points[1].X, out points[1].Y);
@@ -87,36 +118,16 @@ namespace Clockface
 					points[1].X -= (15f * Ratio);
 					points[1].Y -= (8f * Ratio);
 
-					Canvas.Text(RGBA.White, points[1], Clocknumber(i), fontsize, fontname);
+					Canvas.Text(RingColor, points[1], Clocknumber(i), fontsize, fontname);
 				}
-
-				var now = DateTime.Now;
-				var later = now.AddHours(24);
-
-				// calculate the local min/max
-				var min = Single.MaxValue;
-				var max = Single.MinValue;
-				foreach (var tide in tides)
-				{
-					if (tide.Date >= now && tide.Date < later)
-					{
-						min = Math.Min(min, tide.Value);
-						max = Math.Max(max, tide.Value);
-					}
-				}
-
-				// adjust so that the min/max do not rest on the line
-				min -= (0.1f * Ratio);
-				max += (0.1f * Ratio);
-
-				// flip the sign of min to bring to 0
-				min *= -1;
 
 				// draw the tides as a sun burst
+				var count = 0;
 				foreach (var tide in tides)
 				{
 					if (tide.Date >= now && tide.Date < later)
 					{
+						if (LowResolution && count++ % 2 == 0) continue;
 						// calculate angles
 						CalculateAngleByClockface(tide.Date.Hour, tide.Date.Minute, tide.Date.Second, out float hour, out float minute, out float seccond);
 
@@ -130,12 +141,12 @@ namespace Clockface
 						// draw the line
 						var angledelta = Math.Min(Math.Min(Math.Abs(Angle - hour), Math.Abs((Angle + 360) - hour)), Math.Abs(Angle - (hour + 360)));
 						var color = RGBA.Black;
-						if (tide.Date.Subtract(now).TotalMinutes < 6) color = CurrentTimeColor;
+						if (tide.Date.Subtract(now).TotalMinutes < (LowResolution ? 12 : 6)) color = CurrentTimeColor;
 						else if (angledelta < 10) color = HighlightHghColor;
 						else if (angledelta < 20) color = HighlightMidColor;
 						else if (angledelta < 30) color = HighlightLowColor;
 						else color = SpokeColor;
-						Canvas.Polygon(color, points, fill: false, border: false, thickness: 1f * Ratio);
+						Canvas.Polygon(color, points, fill: false, border: false, tidelinethickness);
 					}
 				}
 
@@ -162,9 +173,9 @@ namespace Clockface
 				}
 			}
 			finally
-            {
-				Canvas.ResumeLayout();
-            }
+			{
+				await Canvas.ResumeLayout();
+			}
 
 			// fire that the frame is done
 			if (OnRendered != null) OnRendered();
@@ -173,7 +184,7 @@ namespace Clockface
 			System.Threading.Volatile.Write(ref FrameLock, 0);
 
 			// increase the angle
-			Angle = (Angle + 2f) % 360f;
+			Angle = (Angle + (LowResolution ? 2f : 0.25f)) % 360f;
 		}
 
 		private string Clocknumber(int i)

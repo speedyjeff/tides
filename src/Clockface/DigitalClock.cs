@@ -12,16 +12,17 @@ namespace Clockface
 {
     public class DigitalClock
     {
-		public DigitalClock(ICanvas canvas, bool digitalclockface = true)
+		public DigitalClock(ICanvas canvas, bool hasseconds = true, bool digitalclockface = true, bool showborder = false)
 		{
 			// init
 			Canvas = canvas;
 			UseDigitalClockFace = digitalclockface;
-			ShowEdge = false;
+			HasSeconds = hasseconds;
+			ShowEdge = showborder;
 			Ratio = Canvas.Width / 200f; // 200 was the reference px
 
 			// create timer
-			FrameTimer = new Timer(FrameUpdate, null, 0, 1000);
+			FrameTimer = new Timer(FrameUpdate, null, 0, 100);
 		}
 
 		public event Action OnRendered;
@@ -33,68 +34,82 @@ namespace Clockface
 		private bool UseDigitalClockFace;
 		private float Ratio;
 		private bool ShowEdge;
+		private bool HasSeconds;
+		private DateTime PreviousTime;
 
-		private void FrameUpdate(object state)
+		private async void FrameUpdate(object state)
         {
 			if (Canvas == null) throw new Exception("must have a valid canvas to draw too");
 
 			// the timer is reentrant, so only allow one instance to run
 			if (System.Threading.Interlocked.CompareExchange(ref FrameLock, 1, 0) != 0) return;
 
-			try
-            {
-				Canvas.SuspendLayout();
-				Canvas.Clear(RGBA.Black);
+			var now = DateTime.Now;
 
-				var now = DateTime.Now;
-
-				if (UseDigitalClockFace)
+			// check if something changed
+			if (now.Hour != PreviousTime.Hour ||
+				now.Minute != PreviousTime.Minute ||
+				(HasSeconds && now.Second != PreviousTime.Second))
+			{
+				try
 				{
-					// 8 chars make up a clock - plus room on the side
-					var width = Canvas.Width / 9f;
-					var height = (Canvas.Height * 3f) / 4f;
-					var center = new Point() { X = width, Y = Canvas.Height / 2f };
-					var halfwidth = (width / 2f);
-					var halfheight = (height / 2f);
+					await Canvas.SuspendLayout();
+					Canvas.Clear(RGBA.Black);
 
-					DrawCharacter(Canvas, center, halfwidth, halfheight, now.Hour > 12 ? now.Hour - 12 : now.Hour);
-					center.X += (2 * width);
-					DrawCharacter(Canvas, center, halfwidth, halfheight, ':');
-					center.X += width;
-					DrawCharacter(Canvas, center, halfwidth, halfheight, now.Minute);
-					center.X += (2 * width);
-					DrawCharacter(Canvas, center, halfwidth, halfheight, ':');
-					center.X += width;
-					DrawCharacter(Canvas, center, halfwidth, halfheight, now.Second);
-				}
-				else
-                {
-					var fontsize = 18f * Ratio;
-					var fontname = "Courier New";
-					var center = new Point() { X = 0f, Y = Canvas.Height / 2f };
-
-					Canvas.Text(RGBA.White, center, $"{now:hh:mm:ss}", fontsize, fontname);
-                }
-
-				// outer edge
-				if (ShowEdge)
-				{
-					var quad = new Point[]
+					if (UseDigitalClockFace)
 					{
-					new Point() {X = 0, Y = 0},
-					new Point() {X = Canvas.Width, Y = 0},
-					new Point() {X = Canvas.Width, Y = Canvas.Height},
-					new Point() {X = 0, Y = Canvas.Height}
-					};
-					Canvas.Polygon(RGBA.White, quad, fill: false, border: false, thickness: 2f * Ratio);
-				}
-			}
-			finally
-            {
-				Canvas.ResumeLayout();
-            }
+						// 8 chars make up a clock - plus room on the side
+						var width = HasSeconds ? Canvas.Width / 9f : Canvas.Width / 6f;
+						var height = (Canvas.Height * 3f) / 4f;
+						var center = new Point() { X = width, Y = Canvas.Height / 2f };
+						var halfwidth = (width / 2f);
+						var halfheight = (height / 2f);
 
-			if (OnRendered != null) OnRendered();
+						DrawCharacter(Canvas, center, halfwidth, halfheight, now.Hour > 12 ? now.Hour - 12 : now.Hour);
+						center.X += (2 * width);
+						DrawCharacter(Canvas, center, halfwidth, halfheight, ':');
+						center.X += width;
+						DrawCharacter(Canvas, center, halfwidth, halfheight, now.Minute);
+						if (HasSeconds)
+						{
+							center.X += (2 * width);
+							DrawCharacter(Canvas, center, halfwidth, halfheight, ':');
+							center.X += width;
+							DrawCharacter(Canvas, center, halfwidth, halfheight, now.Second);
+						}
+					}
+					else
+					{
+						var fontsize = 30f * Ratio;
+						var fontname = "Courier New";
+						var center = new Point() { X = 0f, Y = Canvas.Height / 2f };
+
+						Canvas.Text(RGBA.White, center, HasSeconds ? $"{now:hh:mm:ss}" : $"{now:hh:mm}", fontsize, fontname);
+					}
+
+					// outer edge
+					if (ShowEdge)
+					{
+						var quad = new Point[]
+						{
+							new Point() {X = 0, Y = 0},
+							new Point() {X = Canvas.Width, Y = 0},
+							new Point() {X = Canvas.Width, Y = Canvas.Height},
+							new Point() {X = 0, Y = Canvas.Height}
+						};
+						Canvas.Polygon(RGBA.White, quad, fill: false, border: false, thickness: 2f * Ratio);
+					}
+				}
+				finally
+				{
+					await Canvas.ResumeLayout();
+				}
+
+				if (OnRendered != null) OnRendered();
+			}
+
+			// set previous time
+			PreviousTime = now;
 
 			// set state back to not running
 			System.Threading.Volatile.Write(ref FrameLock, 0);

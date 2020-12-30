@@ -4,6 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Utilities;
 
 namespace wintideclock
@@ -96,15 +97,17 @@ namespace wintideclock
 			Graphics.DrawString(text, GetCachedFont(fontname, fontsize), GetCachedSolidBrush(color), topleft.X, topleft.Y);
 		}
 
-		public void SuspendLayout()
+		public Task SuspendLayout()
         {
 			LayoutLock.EnterWriteLock();
-        }
+			return Task.CompletedTask;
+		}
 
-		public void ResumeLayout()
+		public Task ResumeLayout()
         {
 			LayoutLock.ExitWriteLock();
-        }
+			return Task.CompletedTask;
+		}
 
 		#region private
 		private Graphics Graphics;

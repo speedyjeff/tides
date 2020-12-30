@@ -53,7 +53,7 @@
 
         // digital clock
         if (DigitalClockCanvas == null) DigitalClockCanvas = new RegionBlazorCanvas(Canvas, new Point() { X = ((524f / 2f) - (200f / 2f)) * wratio, Y = (524f + 5f) * hratio }, regionwidth: (long)(200 * wratio), regionheight: (long)(50 * hratio));
-        if (DigitalClock == null) DigitalClock = new DigitalClock(DigitalClockCanvas, digitalclockface: true);
+        if (DigitalClock == null) DigitalClock = new DigitalClock(DigitalClockCanvas, hasseconds: false, digitalclockface: true);
 
         // weather
         if (WeatherCanvas == null) WeatherCanvas = new RegionBlazorCanvas(Canvas, new Point() { X = 524 * wratio, Y = 400 * hratio }, regionwidth: (long)(500 * wratio), regionheight: (long)(200 * hratio));
@@ -65,6 +65,6 @@
 
         // tide clock
         if (TideClockCanvas == null) TideClockCanvas = new RegionBlazorCanvas(Canvas, new Point() { X = 0, Y = 0 }, regionwidth: (long)(524 * wratio), regionheight: (long)(524 * hratio));
-        if (TideClock == null) TideClock = new TideClock(TideClockCanvas, External);
+        if (TideClock == null) TideClock = new TideClock(TideClockCanvas, External, lowresolution: true);
     }
 }

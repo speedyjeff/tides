@@ -61,12 +61,14 @@ namespace tidalclock
 			Canvas.Text(color, rtopleft, text, fontsize, fontname);
 		}
 
-		public void SuspendLayout()
+		public Task SuspendLayout()
 		{
+			return Canvas.SuspendLayout();
 		}
 
-		public void ResumeLayout()
+		public Task ResumeLayout()
 		{
+			return Canvas.ResumeLayout();
 		}
 
 		#region private

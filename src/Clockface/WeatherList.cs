@@ -45,17 +45,17 @@ namespace Clockface
 			// grab predictions
 			var weather = await Prediction.CurrentWeather();
 
+			var rowheight = 26f * Ratio;
+			var fontsize = 18f * Ratio;
+			var fontname = "Courier New";
+			var point = new Point() { X = 0f, Y = 0f };
+
 			try
 			{
-				Canvas.SuspendLayout();
+				await Canvas.SuspendLayout();
 
 				// clear
 				Canvas.Clear(RGBA.Black);
-
-				var rowheight = 26f * Ratio;
-				var fontsize = 18f * Ratio;
-				var fontname = "Courier New";
-				var point = new Point() { X = 0f, Y = 0f };
 
 				point.Y = (rowheight * 1);
 				Canvas.Text(RGBA.White, point, "Local weather", fontsize, fontname);
@@ -111,7 +111,7 @@ namespace Clockface
 			}
 			finally
 			{
-				Canvas.ResumeLayout();
+				await Canvas.ResumeLayout();
 			}
 
 			// fire that the frame is done

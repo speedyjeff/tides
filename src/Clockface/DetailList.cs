@@ -88,18 +88,18 @@ namespace Clockface
             }
 			if (current != null) extremedetails.Add(current);
 
+			var now = DateTime.Now;
+			var rowheight = 24f * Ratio;
+			var margin = 20f * Ratio;
+			var headerfontsize = 20f * Ratio;
+			var headerfontname = "Courier New"; // "Eras Light ITC";
+			var datafontsize = 18f * Ratio;
+			var datafontname = "Courier New";
+			var point = new Point() { X = 0f, Y = 0f };
+
 			try
 			{
-				Canvas.SuspendLayout();
-
-				var now = DateTime.Now;
-				var rowheight = 24f * Ratio;
-				var margin = 20f * Ratio;
-				var headerfontsize = 20f * Ratio;
-				var headerfontname = "Courier New"; // "Eras Light ITC";
-				var datafontsize = 18f * Ratio;
-				var datafontname = "Courier New";
-				var point = new Point() { X = 0f, Y = 0f };
+				await Canvas.SuspendLayout();
 
 				// clear
 				Canvas.Clear(RGBA.Black);
@@ -142,7 +142,7 @@ namespace Clockface
 			}
 			finally
 			{
-				Canvas.ResumeLayout();
+				await Canvas.ResumeLayout();
 			}
 
 			// fire that the frame is done

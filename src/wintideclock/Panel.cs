@@ -44,7 +44,7 @@ namespace wintideclock
 			TideClock.OnRendered += FrameRender;
 
 			// create the digital clock
-			DigitalClock = new DigitalClock(DigitalClockImage.Canvas, digitalclockface: true);
+			DigitalClock = new DigitalClock(DigitalClockImage.Canvas, hasseconds: true, digitalclockface: true);
 			DigitalClock.OnRendered += FrameRender;
 
 			// create detail list
