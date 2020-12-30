@@ -30,9 +30,29 @@ sh> sudo systemctl restart vsftpd
 sh> sudo systemctl status vsftpd
 ```
 
-* Setup Tides Directory
+* Install unclutter to hide mouse
+```
+sh> sudo apt install unclutter
+sh> unclutter -idle 1 -root &
+```
+
+* Setup Tides Directory and auto launch
 ```
 sh> mkdir /home/tides
+sh> vi /home/tides/launch.sh
+  cd /home/tides
+  unclutter -idle 1 -root &
+  ./directoryserver -port 8000 -dir wwwroot/ -noshutdown &
+  sleep 5
+  firefox http://127.0.0.1:8000 &
+sh> chmod +x /home/tides/launch.sh
+sh> mkdir ~/.config/autostart
+sh> vi ~/.config/autostart/.desktop
+  [Desktop Entry]
+  Type=Application
+  Name=Tidal Clock
+  Exec=/home/tides/launch.sh
+  X-GNOME-Autostart-enabled=true
 ```
 * Install Firefox Add-ons
   * [CORS Everywhere](https://addons.mozilla.org/en-US/firefox/addon/cors-everywhere)
@@ -44,6 +64,7 @@ sh> mkdir /home/tides
   * Blank screen = never
   * Automatic Suspend = off
 * Settings -> Notifications -> Do not distrub
+  * Printer - no notifications
 
 ### Update Tidal Clock
 
@@ -69,6 +90,8 @@ sh> sudo tar -xf ../<ftp user>/tidalclock.tar .
 * Run tidal clock
 ```
 sh> cd /home/tides
-sh> ./directoryserver -port 8000 -dir wwwroot/ &
+sh> ./launch.sh
+OR
+sh> ./directoryserver -port 8000 -dir wwwroot/ -noshutdown &
 sh> firefox http://127.0.0.1:8000 &
 ```
