@@ -21,8 +21,7 @@ sh> sudo ufw allow ssh
 sh> sudo ufw allow ftp
 ```
 
-* Enable ftp
-https://www.osradar.com/how-to-set-up-an-ftp-server-ubuntu-20-04/
+* [Enable ftp](https://www.osradar.com/how-to-set-up-an-ftp-server-ubuntu-20-04)
 ```
 sh> sudo systemctl restart vsftpd
 sh> sudo systemctl status vsftpd
@@ -31,12 +30,11 @@ sh> sudo systemctl status vsftpd
 * Setup Tides Directory
 ```
 sh> mkdir /home/tides
-sh> sudo chown <ftp user>: tides
 ```
 * Install Firefox Add-ons
-  * (CORS Everywhere)[https://addons.mozilla.org/en-US/firefox/addon/cors-everywhere]
+  * [CORS Everywhere](https://addons.mozilla.org/en-US/firefox/addon/cors-everywhere)
     * Preferences - Enabled on Startup 'On'
-  * (ForceFull)[https://addons.mozilla.org/en-US/firefox/addon/forcefull]
+  * [ForceFull](https://addons.mozilla.org/en-US/firefox/addon/forcefull)
 
 * Create ftp user
 * Settings -> Power 
@@ -46,7 +44,7 @@ sh> sudo chown <ftp user>: tides
 
 ### Update Tidal Clock
 
-* (Http file server)[https://github.com/speedyjeff/directoryserver]
+* [Http file server](https://github.com/speedyjeff/directoryserver)
   * Publish as 'Release + linux-arm32 + self-contained + trimmed + single file'
 ```
 ftp> put <local dir>\directoryserver\directoryserver\bin\Release\net5.0\publish\directoryserver /home/<ftp user>/directoryserver
@@ -55,7 +53,7 @@ sh> cp /home/<ftp user/directoryserver /home/tides/directoryserver
 sh> chmod +x directoryserver
 ```
 
-* (Tidal Clock)[https://github.com/speedyjeff/tides]
+* [Tidal Clock](https://github.com/speedyjeff/tides)
   * Publish as 'Release + browser-wasm'
 ```
 cmd> cd src\tidalclock\bin\Release\net5.0\browser-wasm\publish
