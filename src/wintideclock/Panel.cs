@@ -139,9 +139,9 @@ namespace wintideclock
 					DigitalClockImage.Canvas.SuspendLayout();
 					Canvas.DrawImage(DigitalClockImage.UnderlyingImage, new Rectangle()
 					{
-						X = (int)(((524f / 2f) - (100f/2f)) * wratio),
+						X = (int)(((524f / 2f) - (200f/2f)) * wratio),
 						Y = (int)((524f - 5f) * hratio),
-						Width = (int)(100f * wratio),
+						Width = (int)(200f * wratio),
 						Height = (int)(50f * hratio)
 					});
 				}

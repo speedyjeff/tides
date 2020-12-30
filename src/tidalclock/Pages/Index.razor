@@ -13,7 +13,7 @@
 </style>
 
 <div>
-    <BECanvas Width="1280" Height="800" @ref="_canvasReference"></BECanvas>
+    <BECanvas Width="1210" Height="750" @ref="_canvasReference"></BECanvas>
 </div>
 
 @code
@@ -41,6 +41,7 @@
             await _context.FillRectAsync(x: 0, y: 0, _canvasReference.Width, _canvasReference.Height);
         }
 
+        // scaled up from 1024x600
         var wratio = ((float)_canvasReference.Width / (float)1024);
         var hratio = ((float)_canvasReference.Height / (float)600);
 
@@ -51,7 +52,7 @@
         if (Canvas == null) Canvas = new BlazorCanvas(_context, _canvasReference.Width, _canvasReference.Height);
 
         // digital clock
-        if (DigitalClockCanvas == null) DigitalClockCanvas = new RegionBlazorCanvas(Canvas, new Point() { X = ((524f / 2f) - (100f / 2f)) * wratio, Y = (524f + 5f) * hratio }, regionwidth: (long)(100 * wratio), regionheight: (long)(50 * hratio));
+        if (DigitalClockCanvas == null) DigitalClockCanvas = new RegionBlazorCanvas(Canvas, new Point() { X = ((524f / 2f) - (200f / 2f)) * wratio, Y = (524f + 5f) * hratio }, regionwidth: (long)(200 * wratio), regionheight: (long)(50 * hratio));
         if (DigitalClock == null) DigitalClock = new DigitalClock(DigitalClockCanvas, digitalclockface: true);
 
         // weather

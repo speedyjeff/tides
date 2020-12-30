@@ -10,6 +10,8 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
+// todo tighten up when weather is refreshed
+
 namespace External
 {
 	public struct Data

@@ -7,6 +7,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Utilities;
 
+// todo add an indicator when the weather is out of date
+
 namespace Clockface
 {
     public class WeatherList
@@ -51,7 +53,7 @@ namespace Clockface
 				Canvas.Clear(RGBA.Black);
 
 				var rowheight = 26f * Ratio;
-				var fontsize = 16f * Ratio;
+				var fontsize = 18f * Ratio;
 				var fontname = "Courier New";
 				var point = new Point() { X = 0f, Y = 0f };
 

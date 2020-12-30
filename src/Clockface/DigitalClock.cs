@@ -17,10 +17,11 @@ namespace Clockface
 			// init
 			Canvas = canvas;
 			UseDigitalClockFace = digitalclockface;
+			ShowEdge = false;
 			Ratio = Canvas.Width / 200f; // 200 was the reference px
 
 			// create timer
-			FrameTimer = new Timer(FrameUpdate, null, 0, 100);
+			FrameTimer = new Timer(FrameUpdate, null, 0, 1000);
 		}
 
 		public event Action OnRendered;
@@ -31,6 +32,7 @@ namespace Clockface
 		private int FrameLock = 0;
 		private bool UseDigitalClockFace;
 		private float Ratio;
+		private bool ShowEdge;
 
 		private void FrameUpdate(object state)
         {
@@ -75,14 +77,17 @@ namespace Clockface
                 }
 
 				// outer edge
-				var quad = new Point[]
+				if (ShowEdge)
 				{
+					var quad = new Point[]
+					{
 					new Point() {X = 0, Y = 0},
 					new Point() {X = Canvas.Width, Y = 0},
 					new Point() {X = Canvas.Width, Y = Canvas.Height},
 					new Point() {X = 0, Y = Canvas.Height}
-				};
-				Canvas.Polygon(RGBA.White, quad, fill: false, border: false, thickness: 2f * Ratio);
+					};
+					Canvas.Polygon(RGBA.White, quad, fill: false, border: false, thickness: 2f * Ratio);
+				}
 			}
 			finally
             {
@@ -109,7 +114,7 @@ namespace Clockface
 		private void DrawCharacter(ICanvas canvas, Point center, float halfwidth, float halfheight, char chr)
         {
 			// reduce halfwidth to leave space
-			halfwidth *= 0.75f;
+			halfwidth *= 0.5f;
 
 			var quad = new Point[4];
 			var elementdepth = (halfwidth / 3f);

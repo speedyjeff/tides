@@ -21,7 +21,7 @@ namespace Clockface
 			Ratio = Math.Min(Canvas.Width, Canvas.Height) / 524f; // 524 was the reference px
 
 			// create timer
-			FrameTimer = new Timer(FrameUpdate, null, 0, 50);
+			FrameTimer = new Timer(FrameUpdate, null, 0, 1000);
 		}
 
 		public event Action OnRendered;
@@ -59,7 +59,7 @@ namespace Clockface
 				var dimension = Math.Min(Canvas.Width, Canvas.Height);
 				var center = new Point((dimension / 2f), (dimension / 2f), z: 0f);
 				var points = new Point[2];
-				var fontsize = 16f * Ratio;
+				var fontsize = 18f * Ratio;
 				var fontname = "Courier New";
 
 				// clear
@@ -173,7 +173,7 @@ namespace Clockface
 			System.Threading.Volatile.Write(ref FrameLock, 0);
 
 			// increase the angle
-			Angle = (Angle + 0.25f) % 360f;
+			Angle = (Angle + 2f) % 360f;
 		}
 
 		private string Clocknumber(int i)
