@@ -61,8 +61,9 @@ sh> vi ~/.config/autostart/.desktop
 
 * Create ftp user
 * Settings -> Power 
+  * Automatic suspend - when idle 1 hour
+  * Power Button Action - power off
   * Blank screen = never
-  * Automatic Suspend = off
 * Settings -> Notifications -> Do not distrub
   * Printer - no notifications
 
