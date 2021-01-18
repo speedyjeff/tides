@@ -3,6 +3,7 @@ using LibUsbDotNet.LibUsb;
 using LibUsbDotNet.Main;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 
 using Acurite;
@@ -17,6 +18,7 @@ namespace acuritehub
         public AcuriteStation()
         {
             Context = new UsbContext();
+            HasConfigured = new HashSet<long>();
         }
 
         public AcuriteData Read()
@@ -43,6 +45,19 @@ namespace acuritehub
             {
                 // open the device for communication
                 device.Open();
+
+                // on Linux we need to ask the kernel to detach the interface first
+                if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
+                {
+                    var key = ((long)productid << 32) | ((long)vendorid);
+		    if (!HasConfigured.Contains(key))
+                    {
+                        if (device.DeviceHandle == null) throw new Exception("failed to properly open device");
+                        var ec = DetachKernelDriver(device.DeviceHandle, 0);
+                        if (ec != Error.Success) Console.WriteLine($"failed to detach kernel from device : {ec}");
+                        HasConfigured.Add(key);
+                    }
+                }
 
                 // If this is a "whole" usb device (libusb-win32, linux libusb-1.0)
                 // it exposes an IUsbDevice interface. If not (WinUSB) the 
@@ -133,6 +148,12 @@ namespace acuritehub
             22.5f, // 14
             180.0f, // 15
         };
+
+	private HashSet<long> HasConfigured;
+
+        // necessary to ensure the kernel is not using the usb interface
+        [DllImport("libusb-1.0.so.0", CallingConvention = CallingConvention.Cdecl, EntryPoint = "libusb_detach_kernel_driver")]
+        private static extern Error DetachKernelDriver(DeviceHandle devHandle, int interfaceNumber);
 
         private bool ReadReport1(IUsbDevice device, ref AcuriteData result)
         {
