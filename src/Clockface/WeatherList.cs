@@ -35,6 +35,19 @@ namespace Clockface
 		private int FrameLock = 0;
 		private float Ratio;
 
+		private static readonly string[] CompassNames = new string[]
+			{"N", "NNE", "NE", "ENE",
+			"E", "ESE", "SE", "SSE",
+			"S", "SSW", "SW", "WSW",
+			"W", "WNW", "NW", "NNW"};
+
+		private static string DegreesToCompass(float deg)
+        {
+			var index = (int)(deg / 22.5f);
+			if (index >= 0 && index < CompassNames.Length) return CompassNames[index];
+			throw new Exception($"Unknown degree {deg}, {index}");
+        }
+
 		private async void FrameUpdate(object state)
 		{
 			if (Canvas == null) throw new Exception("must have a valid canvas to draw too");
@@ -44,6 +57,7 @@ namespace Clockface
 
 			// grab predictions
 			var weather = await Prediction.CurrentWeather();
+			var weatherStation = await Prediction.CurrentWeatherStation();
 
 			var rowheight = 26f * Ratio;
 			var fontsize = 18f * Ratio;
@@ -57,6 +71,7 @@ namespace Clockface
 				// clear
 				Canvas.Clear(RGBA.Black);
 
+				// current weather
 				point.Y = (rowheight * 1);
 				Canvas.Text(RGBA.White, point, "Local weather", fontsize, fontname);
 
@@ -90,14 +105,16 @@ namespace Clockface
 							Canvas.Text(RGBA.White, point, $"wind:    {w.StrValue}", fontsize, fontname);
 							break;
 						case "windspeed":
-							point.X = (rowheight * 5);
+							point.X = (rowheight * 6);
 							point.Y = (rowheight * 5);
 							Canvas.Text(RGBA.White, point, $"{w.StrValue.ToLower()}", fontsize, fontname);
 							break;
 						case "shortforecast":
 							point.X = 0f;
 							point.Y = (rowheight * 6);
-							Canvas.Text(RGBA.White, point, $"{w.StrValue}", fontsize, fontname);
+							var description = w.StrValue;
+							if (description.Length > 23) description = description.Substring(0, 23) + "...";
+							Canvas.Text(RGBA.White, point, $"{description}", fontsize, fontname);
 							// debug
 							if (true)
 							{
@@ -107,7 +124,65 @@ namespace Clockface
 							}
 							break;
                     }
-                }
+				}
+
+				// weather station
+				if (weatherStation.Count > 0)
+				{
+					var padding = (rowheight * 11);
+					var avoiddups = new HashSet<string>();
+					point.Y = (rowheight * 1);
+					point.X = padding;
+					Canvas.Text(RGBA.White, point, $"Weather Station", fontsize, fontname);
+
+					foreach (var w in weatherStation.OrderByDescending(s => s.Date))
+					{
+						if (avoiddups.Contains(w.Type)) continue;
+
+						switch (w.Type)
+						{
+							case "outtemperature":
+								point.X = padding;
+								point.Y = (rowheight * 2);
+								Canvas.Text(RGBA.White, point, $"current:  {w.Value:f2}°", fontsize, fontname);
+								break;
+							case "outhumidity":
+								point.X = padding;
+								point.Y = (rowheight * 3);
+								Canvas.Text(RGBA.White, point, $"humidity: {w.Value:f0}%", fontsize, fontname);
+								break;
+							case "pressure":
+								point.X = padding;
+								point.Y = (rowheight * 4);
+								Canvas.Text(RGBA.White, point, $"pressure: {w.Value:f2} inHg", fontsize, fontname);
+								break;
+							case "winddirection":
+								point.X = padding;
+								point.Y = (rowheight * 5);
+								Canvas.Text(RGBA.White, point, $"wind:     {DegreesToCompass(w.Value)}", fontsize, fontname);
+								break;
+							case "windspeed":
+								point.X = padding + (rowheight * 6);
+								point.Y = (rowheight * 5);
+								Canvas.Text(RGBA.White, point, $"{w.Value:f0} mph", fontsize, fontname);
+								break;
+							case "raintotal":
+								point.X = padding;
+								point.Y = (rowheight * 6);
+								Canvas.Text(RGBA.White, point, $"rain:      {w.Value:f2} in", fontsize, fontname);
+								// debug
+								if (true)
+								{
+									point.X = padding;
+									point.Y = (rowheight * 7);
+									Canvas.Text(RGBA.White, point, $"{w.Date.ToLocalTime():yyyy/MM/dd hh:mm}", fontsize * 0.5f, fontname);
+								}
+								break;
+						}
+
+						avoiddups.Add(w.Type);
+					}
+				}
 			}
 			finally
 			{

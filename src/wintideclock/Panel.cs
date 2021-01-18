@@ -37,7 +37,7 @@ namespace wintideclock
 			WeatherListImage = new WritableBitmap(width: 4096, height: (int)(4096f*(2f/5f))); // keep 5:2 ratio
 
 			// https://www.tidesandcurrents.noaa.gov/tide_predictions.html
-			External = new Predictions("La Push, WA", noahStationId: 9442396, lat: 47.9133f, lng: -124.6369f, lookaheadhours: 24);
+			External = new Predictions("La Push, WA", noahStationId: 9442396, lat: 47.9133f, lng: -124.6369f);
 
 			// create clock face
 			TideClock = new TideClock(TideClockImage.Canvas, External);

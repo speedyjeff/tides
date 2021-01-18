@@ -8,13 +8,15 @@ namespace Tides.Test
 	{
 		static void Main(string[] args)
 		{
-			var predictions = new Predictions("test", noahStationId: 9442396, lat: 47.9133f, lng: -124.6369f, lookaheadhours: 24);
+			var predictions = new Predictions("test", noahStationId: 9442396, lat: 47.9133f, lng: -124.6369f);
 
 			var task = Task.Run(async () =>
 		    {
-			   var sum = await Tides(predictions);
-			   sum += await Suns(predictions);
-			   sum += await Weather(predictions);
+				int sum = 0;
+			    sum += await Tides(predictions);
+			    sum += await Suns(predictions);
+			    sum += await Weather(predictions);
+				sum += await WeatherStation(predictions);
 
 			   Console.WriteLine($"sum = {sum}");
 		    });
@@ -113,6 +115,34 @@ namespace Tides.Test
 
 			// this round should not cause a query
 			weather = await predictions.CurrentWeather();
+
+			if (weather.Count == 0 || querycount != previousquerycount) throw new Exception($"Invalid query : {weather.Count} {querycount}");
+
+			return 0;
+		}
+
+		private async static Task<int> WeatherStation(Predictions predictions)
+		{
+			var querycount = 0;
+
+			predictions.OnQuery += () =>
+			{
+				querycount++;
+			};
+
+			// this should cause a query
+			var weather = await predictions.CurrentWeatherStation();
+			foreach (var w in weather)
+			{
+				Console.WriteLine($"{w.Date} {w.Type} {w.StrValue} {w.Value}");
+			}
+
+			if (weather.Count == 0 || querycount != 1) throw new Exception($"Invalid query : {weather.Count} {querycount}");
+
+			var previousquerycount = querycount;
+
+			// this round should not cause a query
+			weather = await predictions.CurrentWeatherStation();
 
 			if (weather.Count == 0 || querycount != previousquerycount) throw new Exception($"Invalid query : {weather.Count} {querycount}");
 

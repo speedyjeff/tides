@@ -46,7 +46,7 @@
         var hratio = ((float)_canvasReference.Height / (float)600);
 
         // init external data
-        if (External == null) External = new Predictions("La Push, WA", noahStationId: 9442396, lat: 47.9133f, lng: -124.6369f, lookaheadhours: 24);
+        if (External == null) External = new Predictions("La Push, WA", noahStationId: 9442396, lat: 47.9133f, lng: -124.6369f);
 
         // init components
         if (Canvas == null) Canvas = new BlazorCanvas(_context, _canvasReference.Width, _canvasReference.Height);

@@ -10,6 +10,8 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Acurite;
+
 // todo tighten up when weather is refreshed
 
 namespace External
@@ -24,14 +26,13 @@ namespace External
 
 	public class Predictions
 	{
-		public Predictions(string location, int noahStationId, float lat, float lng, int lookaheadhours)
+		public Predictions(string location, int noahStationId, float lat, float lng)
 		{
 			// storage for all data
 			AllData = new Dictionary<PredictionType, PredictionDetails>();
 
 			// init
 			Location = location;
-			LookaheadHours = lookaheadhours;
 			NoahStationId = noahStationId;
 			Latitude = lat;
 			Longitude = lng;
@@ -41,7 +42,13 @@ namespace External
 
 		public async Task<List<Data>> CurrentTides()
 		{
-			return await LatestPredictions(PredictionType.Tides, LookaheadHours, lookaheadmultiplier: 3, retrieveAdditional: async (start, end) =>
+			return await LatestPredictions(
+				PredictionType.Tides,
+				deleteAfterMinutes: 24 * 60, 
+				lookaheadMinutes: 3 * 24 * 60,
+				cacheInvalidationMinutes: 2 * 60,
+				pullMoreMinutes: 24 * 60, 
+				retrieveAdditional: async (start, end) =>
 			{
 				var json = await GetWebJson(string.Format(PredictionUrl, start, end, NoahStationId, "mllw"));
 				return new List<string>() { json };
@@ -50,7 +57,13 @@ namespace External
 
 		public async Task<List<Data>> CurrentExtremes()
 		{
-			return await LatestPredictions(PredictionType.Extremes, LookaheadHours, lookaheadmultiplier: 14, retrieveAdditional: async (start, end) =>
+			return await LatestPredictions(
+				PredictionType.Extremes,
+				deleteAfterMinutes: 24 * 60, 
+				lookaheadMinutes: 14 * 24 * 60,
+				cacheInvalidationMinutes: 2 * 60,
+				pullMoreMinutes: 24 * 60, 
+				retrieveAdditional: async (start, end) =>
 			{
 				var json = await GetWebJson(string.Format(PredictionHiloUrl, start, end, NoahStationId, "mllw"));
 				return new List<string>() { json };
@@ -59,7 +72,13 @@ namespace External
 
 		public async Task<List<Data>> CurrentSuns()
 		{
-			return await LatestPredictions(PredictionType.Suns, LookaheadHours, lookaheadmultiplier: 7, retrieveAdditional: async (start, end) =>
+			return await LatestPredictions(
+				PredictionType.Suns,
+				deleteAfterMinutes: 24 * 60, 
+				lookaheadMinutes: 7 * 24 * 60,
+				cacheInvalidationMinutes: 2 * 60,
+				pullMoreMinutes: 24 * 60, 
+				retrieveAdditional: async (start, end) =>
 			{
 				// query each day seperately
 				var json = new List<string>();
@@ -76,16 +95,38 @@ namespace External
 
 		public async Task<List<Data>> CurrentWeather()
 		{
-			return await LatestPredictions(PredictionType.Weather, lookaheadhours: 0, lookaheadmultiplier: 0, retrieveAdditional: async (start, end) =>
+			return await LatestPredictions(
+				PredictionType.Weather,
+				deleteAfterMinutes: 60, 
+				lookaheadMinutes: 0,
+				cacheInvalidationMinutes: 15,
+				pullMoreMinutes: 60, 
+				retrieveAdditional: async (start, end) =>
 			{
-					// get the grid where to query for weather
-					var grid = ParseJson(await GetWebJson(string.Format(WeatherInfoUrl, Latitude, Longitude)), PredictionType.WeatherInfo);
+				// get the grid where to query for weather
+				var grid = ParseJson(await GetWebJson(string.Format(WeatherInfoUrl, Latitude, Longitude)), PredictionType.WeatherInfo);
 				if (grid == null || grid.Count != 1) throw new Exception("failed to retrieve a grid for this location");
-					// this call returns the url to call to get the data
-					return new List<string>()
+				// this call returns the url to call to get the data
+				return new List<string>()
 				{
 						await GetWebJson(grid[0].StrValue)
 				};
+			});
+		}
+
+		public async Task<List<Data>> CurrentWeatherStation()
+        {
+			// return results
+			return await LatestPredictions(
+				PredictionType.Station,
+				deleteAfterMinutes: 1, 
+				lookaheadMinutes: 0,
+				cacheInvalidationMinutes: 1,
+				pullMoreMinutes: -1, 
+				retrieveAdditional: async (start, end) =>
+			{
+				var json = await GetWebJson(WeatherStationUrl);
+				return new List<string>() { json };
 			});
 		}
 
@@ -93,25 +134,22 @@ namespace External
 
 		#region private
 		private Dictionary<PredictionType, PredictionDetails> AllData;
-		private int LookaheadHours;
 		private int NoahStationId;
 		private float Latitude;
 		private float Longitude;
 
-		private enum PredictionType { Tides, Extremes, Suns, WeatherInfo, Weather };
+		private enum PredictionType { Tides, Extremes, Suns, WeatherInfo, Weather, Station };
 		private class PredictionDetails
         {
 			public Dictionary<string, Data> Data;
 			public List<Data> Cache;
 			public Stopwatch Timer;
-			public float CacheInvalidationMinutes;
 
 			public PredictionDetails()
             {
 				Data = new Dictionary<string, Data>();
 				Cache = new List<Data>();
 				Timer = new Stopwatch();
-				CacheInvalidationMinutes = 0f;
 			}
         }
 
@@ -126,18 +164,29 @@ namespace External
 		// https://www.weather.gov/documentation/services-web-api
 		private const string WeatherInfoUrl = "https://api.weather.gov/points/{0},{1}"; // lat,lng
 
+		// locally built Acurite Station hub
+		private const string WeatherStationUrl = "http://acuritehub:11000/weather";
+
 		private static readonly byte[] s_T = System.Text.Encoding.UTF8.GetBytes("t");
 		private static readonly byte[] s_V = System.Text.Encoding.UTF8.GetBytes("v");
 		private static readonly byte[] s_Type = System.Text.Encoding.UTF8.GetBytes("type");
 		private static readonly byte[] s_Sunrise = System.Text.Encoding.UTF8.GetBytes("sunrise");
 		private static readonly byte[] s_Sunset = System.Text.Encoding.UTF8.GetBytes("sunset");
-		private static readonly byte[] s_ForecastHourly = System.Text.Encoding.UTF8.GetBytes("forecastHourly");
+		private static readonly byte[] s_ForecastHourly = System.Text.Encoding.UTF8.GetBytes("forecastHourly"); 
 		private static readonly byte[] s_EndTime = System.Text.Encoding.UTF8.GetBytes("endTime");
 		private static readonly byte[] s_Temperature = System.Text.Encoding.UTF8.GetBytes("temperature");
 		private static readonly byte[] s_WindSpeed = System.Text.Encoding.UTF8.GetBytes("windSpeed");
 		private static readonly byte[] s_WindDirection = System.Text.Encoding.UTF8.GetBytes("windDirection");
 		private static readonly byte[] s_ShortForecast = System.Text.Encoding.UTF8.GetBytes("shortForecast");
 		private static readonly byte[] s_TemperatureTrend = System.Text.Encoding.UTF8.GetBytes("temperatureTrend");
+		private static readonly byte[] s_UtcDate = System.Text.Encoding.UTF8.GetBytes("utcDate");
+		private static readonly byte[] s_Signal = System.Text.Encoding.UTF8.GetBytes("signal");
+		private static readonly byte[] s_Lowbattery = System.Text.Encoding.UTF8.GetBytes("lowBattery");
+		private static readonly byte[] s_RaintTotal = System.Text.Encoding.UTF8.GetBytes("rainTotal");
+		private static readonly byte[] s_OutTemperature = System.Text.Encoding.UTF8.GetBytes("outTemperature");
+		private static readonly byte[] s_InTemperature = System.Text.Encoding.UTF8.GetBytes("inTemperature");
+		private static readonly byte[] s_OutHumidity = System.Text.Encoding.UTF8.GetBytes("outHumidity");
+		private static readonly byte[] s_Pressure = System.Text.Encoding.UTF8.GetBytes("pressure");
 
 		private List<Data> ParseJson(string json, PredictionType type)
 		{
@@ -159,6 +208,14 @@ namespace External
 			var winddirectionseen = false;
 			var shortforecastseen = false;
 			var temperaturetrendseen = false;
+			var utcdateseen = false;
+			var signalseen = false;
+			var lowbatteryseen = false;
+			var raintotalseen = false;
+			var outtemperatureseen = false;
+			var outhumidityseen = false;
+			var pressureseen = false;
+			var intemperatureseen = false;
 			var collectweather = false;
 			var results = new List<Data>();
 			var p = default(Data);
@@ -331,7 +388,106 @@ namespace External
 						shortforecastseen = false;
 					}
 				}
-			}
+
+				//
+				// station
+				//
+				if (type == PredictionType.Station)
+				{
+					utcdateseen |= (reader.TokenType == JsonTokenType.PropertyName && reader.ValueSpan.SequenceEqual(s_UtcDate));
+					if (utcdateseen && reader.TokenType == JsonTokenType.String)
+					{
+						var t = System.Text.Encoding.UTF8.GetString(reader.ValueSpan);
+
+						// incoming datetimes are GMT/UTC
+						var date = DateTime.Parse(t, CultureInfo.CurrentCulture, DateTimeStyles.AssumeUniversal).ToUniversalTime();
+						p = new Data() { Date = date, Type = "station" };
+
+						utcdateseen = false;
+					}
+
+					signalseen |= (reader.TokenType == JsonTokenType.PropertyName && reader.ValueSpan.SequenceEqual(s_Signal));
+					if (signalseen && reader.TokenType == JsonTokenType.Null) signalseen = false;
+					if (signalseen && reader.TokenType == JsonTokenType.Number)
+					{
+						p.Date = p.Date.AddMilliseconds(10);
+						results.Add(new Data() { Date = p.Date, Value = Convert.ToSingle(System.Text.Encoding.UTF8.GetString(reader.ValueSpan)), Type = "signal" });
+						signalseen = false;
+					}
+
+					lowbatteryseen |= (reader.TokenType == JsonTokenType.PropertyName && reader.ValueSpan.SequenceEqual(s_Lowbattery));
+					if (lowbatteryseen && reader.TokenType == JsonTokenType.Null) lowbatteryseen = false;
+					if (lowbatteryseen && reader.TokenType != JsonTokenType.PropertyName)
+					{
+						p.Date = p.Date.AddMilliseconds(10);
+						results.Add(new Data() { Date = p.Date, Value = reader.TokenType == JsonTokenType.True ? 1f : 0f, Type = "lowbattery" });
+						lowbatteryseen = false;
+					}
+
+					windspeedseen |= (reader.TokenType == JsonTokenType.PropertyName && reader.ValueSpan.SequenceEqual(s_WindSpeed));
+					if (windspeedseen && reader.TokenType == JsonTokenType.Null) windspeedseen = false;
+					if (windspeedseen && reader.TokenType == JsonTokenType.Number)
+					{
+						p.Date = p.Date.AddMilliseconds(10);
+						results.Add(new Data() { Date = p.Date, Value = Convert.ToSingle(System.Text.Encoding.UTF8.GetString(reader.ValueSpan)), Type = "windspeed" });
+						windspeedseen = false;
+					}
+
+					winddirectionseen |= (reader.TokenType == JsonTokenType.PropertyName && reader.ValueSpan.SequenceEqual(s_WindDirection));
+					if (winddirectionseen && reader.TokenType == JsonTokenType.Null) winddirectionseen = false;
+					if (winddirectionseen && reader.TokenType == JsonTokenType.Number)
+					{
+						p.Date = p.Date.AddMilliseconds(10);
+						results.Add(new Data() { Date = p.Date, Value = Convert.ToSingle(System.Text.Encoding.UTF8.GetString(reader.ValueSpan)), Type = "winddirection" });
+						winddirectionseen = false;
+					}
+
+					raintotalseen |= (reader.TokenType == JsonTokenType.PropertyName && reader.ValueSpan.SequenceEqual(s_RaintTotal));
+					if (raintotalseen && reader.TokenType == JsonTokenType.Null) raintotalseen = false;
+					if (raintotalseen && reader.TokenType == JsonTokenType.Number)
+					{
+						p.Date = p.Date.AddMilliseconds(10);
+						results.Add(new Data() { Date = p.Date, Value = Convert.ToSingle(System.Text.Encoding.UTF8.GetString(reader.ValueSpan)), Type = "raintotal" });
+						raintotalseen = false;
+					}
+
+					outtemperatureseen |= (reader.TokenType == JsonTokenType.PropertyName && reader.ValueSpan.SequenceEqual(s_OutTemperature));
+					if (outtemperatureseen && reader.TokenType == JsonTokenType.Null) outtemperatureseen = false;
+					if (outtemperatureseen && reader.TokenType == JsonTokenType.Number)
+					{
+						p.Date = p.Date.AddMilliseconds(10);
+						results.Add(new Data() { Date = p.Date, Value = Convert.ToSingle(System.Text.Encoding.UTF8.GetString(reader.ValueSpan)), Type = "outtemperature" });
+						outtemperatureseen = false;
+					}
+
+					intemperatureseen |= (reader.TokenType == JsonTokenType.PropertyName && reader.ValueSpan.SequenceEqual(s_InTemperature));
+					if (intemperatureseen && reader.TokenType == JsonTokenType.Null) intemperatureseen = false;
+					if (intemperatureseen && reader.TokenType == JsonTokenType.Number)
+					{
+						p.Date = p.Date.AddMilliseconds(10);
+						results.Add(new Data() { Date = p.Date, Value = Convert.ToSingle(System.Text.Encoding.UTF8.GetString(reader.ValueSpan)), Type = "intemperature" });
+						intemperatureseen = false;
+					}
+
+					outhumidityseen |= (reader.TokenType == JsonTokenType.PropertyName && reader.ValueSpan.SequenceEqual(s_OutHumidity));
+					if (outhumidityseen && reader.TokenType == JsonTokenType.Null) outhumidityseen = false;
+					if (outhumidityseen && reader.TokenType == JsonTokenType.Number)
+					{
+						p.Date = p.Date.AddMilliseconds(10);
+						results.Add(new Data() { Date = p.Date, Value = Convert.ToSingle(System.Text.Encoding.UTF8.GetString(reader.ValueSpan)), Type = "outhumidity" });
+						outhumidityseen = false;
+					}
+
+					pressureseen |= (reader.TokenType == JsonTokenType.PropertyName && reader.ValueSpan.SequenceEqual(s_Pressure));
+					if (pressureseen && reader.TokenType == JsonTokenType.Null) pressureseen = false;
+					if (pressureseen && reader.TokenType == JsonTokenType.Number)
+					{
+						p.Date = p.Date.AddMilliseconds(10);
+						results.Add(new Data() { Date = p.Date, Value = Convert.ToSingle(System.Text.Encoding.UTF8.GetString(reader.ValueSpan)), Type = "pressure" });
+						pressureseen = false;
+					}
+				} // (type == PredictionType.Station)
+			} // while(reader.Read())
 
 			// add the last prediction
 			if (count > 0) results.Add(p);
@@ -341,7 +497,14 @@ namespace External
 			return results;
 		}
 
-		private async Task<List<Data>> LatestPredictions(PredictionType type, int lookaheadhours, int lookaheadmultiplier, Func<DateTime, DateTime, Task<List<string>>> retrieveAdditional)
+		private async Task<List<Data>> LatestPredictions(
+			PredictionType type,
+			int deleteAfterMinutes,       // if data is older than X minutes delete
+			int lookaheadMinutes,         // when querying request data X minutes in the future
+			int cacheInvalidationMinutes, // invalidate the cache after X minutes
+			int pullMoreMinutes,          // request more data if the newest data is older X minutes old
+			Func<DateTime, DateTime, Task<List<string>>> retrieveAdditional
+			)
 		{
 			PredictionDetails details = null;
 			lock (AllData)
@@ -349,24 +512,21 @@ namespace External
 				// get prediction
 				if (!AllData.TryGetValue(type, out details))
 				{
-					details = new PredictionDetails()
-					{
-						CacheInvalidationMinutes = lookaheadhours > 0 ? ((lookaheadhours * 60f) / 12f) : 15f
-					};
+					details = new PredictionDetails();
 					AllData.Add(type, details);
 				}
 			}
 
 			// init
 			var now = DateTime.UtcNow;
-			var past = now.AddHours(-1 * lookaheadhours);
-			var future = now.AddHours(lookaheadhours * lookaheadmultiplier);
-			var datetimewindow = now.AddHours(lookaheadhours);
+			var past = now.AddMinutes(-1 * Math.Abs(deleteAfterMinutes));
+			var future = now.AddMinutes(lookaheadMinutes);
+			var datetimewindow = now.AddMinutes(pullMoreMinutes);
 
 			// check if we have a cahce for this prediction
 			lock (details)
 			{
-				if (details.Cache != null && details.Cache.Count > 0 && details.Timer.IsRunning && details.Timer.Elapsed.TotalMinutes < details.CacheInvalidationMinutes)
+				if (details.Cache != null && details.Cache.Count > 0 && details.Timer.IsRunning && details.Timer.Elapsed.TotalMinutes < cacheInvalidationMinutes)
 				{
 					// return this early
 					return details.Cache;
@@ -403,7 +563,7 @@ namespace External
 				}
 
 				// query for results
-				if (latest == default(DateTime) || datetimewindow > latest)
+				if (latest == default(DateTime) || results.Count == 0 || datetimewindow > latest)
 				{
 					// this call likely involves a network call, which may fail
 					// in order to be resilent to network failures, in that case 
@@ -429,7 +589,7 @@ namespace External
 							foreach (var p in data)
 							{
 								// add it to the set of predictions
-								var key = $"{p.Date:yyyyMMdd HH mm ss}";
+								var key = $"{p.Date:yyyyMMdd HH mm ss fff}";
 								if (!details.Data.ContainsKey(key))
 								{
 									details.Data.Add(key, p);
@@ -485,7 +645,7 @@ namespace External
 						using (var request = new HttpRequestMessage(HttpMethod.Get, url))
 						{
 							// add custom http header
-							request.Headers.Add("User-Agent", $"tids {Latitude + Longitude}");
+							request.Headers.Add("User-Agent", $"tides {Latitude + Longitude}");
 
 							// send request
 							using (var httpResponse = await httpClient.SendAsync(request))
