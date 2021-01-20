@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using LibUsbDotNet;
 using LibUsbDotNet.LibUsb;
 using LibUsbDotNet.Main;
@@ -22,25 +23,46 @@ namespace acuritehub
             // execute the operation
             var program = new Program();
             Console.WriteLine("<ctrl-c> to exit");
-            switch (options.Mode)
+            while (true)
             {
-                // client
-                case ModeName.Client:
-                    if (options.Transport == TransportName.Udp) program.UdpReceiveAsync(options);
-                    else if (options.Transport == TransportName.Http) program.HttpReceiveAsync(options);
-                    break;
+                IRemoteAcuriteData remote = null;
+                try
+                {
+                    switch (options.Mode)
+                    {
+                        // client
+                        case ModeName.Client:
+                            if (options.Transport == TransportName.Udp) remote = program.UdpReceiveAsync(options);
+                            else if (options.Transport == TransportName.Http) program.HttpReceiveAsync(options);
+                            break;
 
-                // server
-                case ModeName.Server:
-                    if (options.Transport == TransportName.Udp) program.UdpSendAsync(options);
-                    else if (options.Transport == TransportName.Http) program.HttpSendAsync(options);
-                    break;
+                        // server
+                        case ModeName.Server:
+                            if (options.Transport == TransportName.Udp) remote = program.UdpSendAsync(options);
+                            else if (options.Transport == TransportName.Http) remote = program.HttpSendAsync(options);
 
-                default: throw new Exception($"unknown mode : {options.Mode}");
+                            // poll
+                            program.PollStation(options);
+                            break;
+
+                        default: throw new Exception($"unknown mode : {options.Mode}");
+                    }
+
+                    // wait indefinetly
+                    while (true) Console.ReadLine();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"{DateTime.Now:o}: catastrophic failure {e.Message}");
+                }
+                finally
+                {
+                    if (remote != null) remote.Close();
+                }
+
+                // wait and retry
+                System.Threading.Thread.Sleep(options.Interval);
             }
-            Console.ReadLine();
-
-            return 0;
         }
 
         #region private
@@ -58,7 +80,7 @@ namespace acuritehub
         //
         // Udp
         //
-        private void UdpReceiveAsync(Options options)
+        private IRemoteAcuriteData UdpReceiveAsync(Options options)
         {
             // wait to receive data from the server
             var remote = new UdtAcuriteData(options.Port);
@@ -68,10 +90,11 @@ namespace acuritehub
                 Console.WriteLine($"{DateTime.Now:o}: Channel: {data.channel} SensorId: {data.sensorId} Signal: {data.signal} Battery: {data.lowBattery} WindSpeed: {data.windSpeed} WindDirection: {data.windDirection} RainTotal: {data.rainTotal} OutTemperature: {data.outTemperature} OutHumitiy: {data.outHumidity} Pressure: {data.pressure} InTemperature: {data.inTemperature}");
                 Console.WriteLine($"{payload}");
             };
-            remote.ListenAsync();
+            remote.ReceiveAsync();
+            return remote;
         }
 
-        private void UdpSendAsync(Options options)
+        private IRemoteAcuriteData UdpSendAsync(Options options)
         {
             // setup to send data via udp
             var remote = new UdtAcuriteData(options.Port);
@@ -83,8 +106,7 @@ namespace acuritehub
                 await remote.SendAsync(json);
             };
 
-            // poll
-            PollStation(options);
+            return remote;
         }
 
         //
@@ -92,22 +114,29 @@ namespace acuritehub
         //
         private async void HttpReceiveAsync(Options options)
         {
-            var http = new HttpAcuriteData(options.Port, listenLocal: true);
-            
-            while(true)
-            {
-                var payload = await http.ReceiveAsync("acuritehub");
-                var data = System.Text.Json.JsonSerializer.Deserialize<AcuriteData>(payload);
-                Console.WriteLine($"{DateTime.Now:o}: Channel: {data.channel} SensorId: {data.sensorId} Signal: {data.signal} Battery: {data.lowBattery} WindSpeed: {data.windSpeed} WindDirection: {data.windDirection} RainTotal: {data.rainTotal} OutTemperature: {data.outTemperature} OutHumitiy: {data.outHumidity} Pressure: {data.pressure} InTemperature: {data.inTemperature}");
-                Console.WriteLine($"{payload}");
+            var http = new HttpAcuriteData(options.Port, options.Protocol, listenLocal: true);
 
-                System.Threading.Thread.Sleep(5000);
+            try
+            {
+                while (true)
+                {
+                    var payload = await http.ReceiveAsync(options.Hostname);
+                    var data = System.Text.Json.JsonSerializer.Deserialize<AcuriteData>(payload);
+                    Console.WriteLine($"{DateTime.Now:o}: Channel: {data.channel} SensorId: {data.sensorId} Signal: {data.signal} Battery: {data.lowBattery} WindSpeed: {data.windSpeed} WindDirection: {data.windDirection} RainTotal: {data.rainTotal} OutTemperature: {data.outTemperature} OutHumitiy: {data.outHumidity} Pressure: {data.pressure} InTemperature: {data.inTemperature}");
+                    Console.WriteLine($"{payload}");
+
+                    System.Threading.Thread.Sleep(options.Interval);
+                }
+            }
+            finally
+            {
+                if (http != null) http.Close();
             }
         }
 
-        private void HttpSendAsync(Options options)
+        private IRemoteAcuriteData HttpSendAsync(Options options)
         {
-            var http = new HttpAcuriteData(options.Port, listenLocal: false);
+            var http = new HttpAcuriteData(options.Port, options.Protocol, listenLocal: false);
             AcuriteData current = new AcuriteData();
 
             // get the latest data
@@ -126,8 +155,7 @@ namespace acuritehub
             // start listening
             http.SendAsync();
 
-            // poll
-            PollStation(options);
+            return http;
         }
 
         //
@@ -162,7 +190,7 @@ namespace acuritehub
                     if (OnPolled != null) OnPolled(data);
                 }
 
-                System.Threading.Thread.Sleep(5000);
+                System.Threading.Thread.Sleep(options.Interval);
             }
         }
         #endregion

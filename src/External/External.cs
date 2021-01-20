@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 using Acurite;
 
-// todo tighten up when weather is refreshed
+// todo subnet notation?
 
 namespace External
 {
@@ -26,7 +26,7 @@ namespace External
 
 	public class Predictions
 	{
-		public Predictions(string location, int noahStationId, float lat, float lng)
+		public Predictions(string location, int noahStationId, float lat, float lng, string subnet)
 		{
 			// storage for all data
 			AllData = new Dictionary<PredictionType, PredictionDetails>();
@@ -36,6 +36,23 @@ namespace External
 			NoahStationId = noahStationId;
 			Latitude = lat;
 			Longitude = lng;
+			WeatherStationAddress = Subnet = null;
+
+			// check that the subnet is in the following format "#.#.#.";
+			var ipparts = subnet.Split('.');
+			if (ipparts.Length >= 3)
+            {
+				if (byte.TryParse(ipparts[0], out byte n1))
+                {
+					if (byte.TryParse(ipparts[1], out byte n2))
+                    {
+						if (byte.TryParse(ipparts[2], out byte n3))
+                        {
+							Subnet = $"{n1}.{n2}.{n3}.";
+                        }
+                    }
+                }
+            }
 		}
 
 		public string Location { get; private set; }
@@ -100,7 +117,7 @@ namespace External
 				deleteAfterMinutes: 60, 
 				lookaheadMinutes: 0,
 				cacheInvalidationMinutes: 15,
-				pullMoreMinutes: 60, 
+				pullMoreMinutes: 0, 
 				retrieveAdditional: async (start, end) =>
 			{
 				// get the grid where to query for weather
@@ -116,6 +133,28 @@ namespace External
 
 		public async Task<List<Data>> CurrentWeatherStation()
         {
+			// need to first discover the service
+			if (string.IsNullOrWhiteSpace(Subnet)) return new List<Data>();
+
+			// discover the service
+			if (string.IsNullOrWhiteSpace(WeatherStationAddress))
+            {
+				Console.WriteLine($"{DateTime.Now:o}: scaning the weather station service");
+				// broadcast a request and record who responded
+				for(int i=1; i<64; i++)
+                {
+					var ip = Subnet + i;
+					var url = string.Format(WeatherStationUrl, ip);
+					if (await QuickCheck(url, millisecondsDelay: 100))
+                    {
+						WeatherStationAddress = ip;
+                    }
+                }
+            }
+
+			// wait until we get a valid address
+			if (string.IsNullOrWhiteSpace(WeatherStationAddress)) return new List<Data>();
+
 			// return results
 			return await LatestPredictions(
 				PredictionType.Station,
@@ -125,8 +164,18 @@ namespace External
 				pullMoreMinutes: -1, 
 				retrieveAdditional: async (start, end) =>
 			{
-				var json = await GetWebJson(WeatherStationUrl);
-				return new List<string>() { json };
+				try
+				{
+					var json = await GetWebJson(string.Format(WeatherStationUrl, WeatherStationAddress));
+					return new List<string>() { json };
+				}
+				catch(Exception)
+                {
+					// need to rescan for this service
+					Console.WriteLine($"{DateTime.Now:o}: resetting weather station service address");
+					WeatherStationAddress = null;
+					return new List<string>();
+                }
 			});
 		}
 
@@ -137,6 +186,8 @@ namespace External
 		private int NoahStationId;
 		private float Latitude;
 		private float Longitude;
+		private string Subnet;
+		private string WeatherStationAddress;
 
 		private enum PredictionType { Tides, Extremes, Suns, WeatherInfo, Weather, Station };
 		private class PredictionDetails
@@ -165,7 +216,7 @@ namespace External
 		private const string WeatherInfoUrl = "https://api.weather.gov/points/{0},{1}"; // lat,lng
 
 		// locally built Acurite Station hub
-		private const string WeatherStationUrl = "http://acuritehub:11000/weather";
+		private const string WeatherStationUrl = "http://{0}:11000/weather";
 
 		private static readonly byte[] s_T = System.Text.Encoding.UTF8.GetBytes("t");
 		private static readonly byte[] s_V = System.Text.Encoding.UTF8.GetBytes("v");
@@ -665,6 +716,34 @@ namespace External
 			}
 
 			throw new Exception("Failed to retrieve text");
+		}
+
+		private async Task<bool> QuickCheck(string url, int millisecondsDelay)
+		{
+			if (string.IsNullOrWhiteSpace(url)) throw new Exception("Must pass in valid url");
+
+			try
+			{
+				// create a cancellation token
+				var cts = new CancellationTokenSource(millisecondsDelay);
+
+				// create request object
+				using (var httpClient = new HttpClient())
+				{
+					using (var request = new HttpRequestMessage(HttpMethod.Get, url))
+					{
+						// send request
+						using (var httpResponse = await httpClient.SendAsync(request, cts.Token))
+						{
+							return httpResponse.IsSuccessStatusCode;
+						}
+					}
+				}
+			}
+			catch (System.Exception)
+			{
+				return false;
+			}
 		}
 		#endregion
 	}

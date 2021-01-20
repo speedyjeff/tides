@@ -15,6 +15,9 @@ namespace acuritehub
         public int? ProductId;
         public bool RawData;
         public TransportName Transport;
+        public string Protocol;
+        public string Hostname;
+        public int Interval;
 
         public Options()
         {
@@ -23,11 +26,14 @@ namespace acuritehub
             Mode = ModeName.Server;
             RawData = false;
             Transport = TransportName.Http;
+            Protocol = "http";
+            Hostname = "";
+            Interval = 5000;
         }
 
         public static int DisplayHelp()
         {
-            Console.WriteLine("./acuritehub [-port ####] [-mode list|client|server] [-transport udp|http] [-vendorid ####] [-productid ####] [-raw]");
+            Console.WriteLine("./acuritehub [-port ####] [-mode list|client|server] [-transport udp|http|https] [-vendorid ####] [-productid ####] [-raw] [-hostname ...] [-interval ####]");
             return 1;
         }
 
@@ -53,6 +59,14 @@ namespace acuritehub
                         if (Int32.TryParse(args[i], out int port)) options.Port = port;
                     }
                 }
+                else if (string.Equals(args[i], "-hostname", StringComparison.OrdinalIgnoreCase))
+                {
+                    i++;
+                    if (i < args.Length)
+                    {
+                        options.Hostname = args[i];
+                    }
+                }
                 else if (string.Equals(args[i], "-vendorid", StringComparison.OrdinalIgnoreCase))
                 {
                     i++;
@@ -67,6 +81,14 @@ namespace acuritehub
                     if (i < args.Length)
                     {
                         if (Int32.TryParse(args[i], out int id)) options.ProductId = id;
+                    }
+                }
+                else if (string.Equals(args[i], "-interval", StringComparison.OrdinalIgnoreCase))
+                {
+                    i++;
+                    if (i < args.Length)
+                    {
+                        if (Int32.TryParse(args[i], out int time)) options.Interval = time;
                     }
                 }
                 else if (string.Equals(args[i], "-mode", StringComparison.OrdinalIgnoreCase))
@@ -86,6 +108,11 @@ namespace acuritehub
                     {
                         if (string.Equals(args[i], "udp", StringComparison.OrdinalIgnoreCase)) options.Transport = TransportName.Udp;
                         else if (string.Equals(args[i], "http", StringComparison.OrdinalIgnoreCase)) options.Transport = TransportName.Http;
+                        else if (string.Equals(args[i], "https", StringComparison.OrdinalIgnoreCase))
+                        {
+                            options.Transport = TransportName.Http;
+                            options.Protocol = "https";
+                        }
                     }
                 }
                 else
@@ -93,6 +120,21 @@ namespace acuritehub
                     Console.WriteLine($"Unknown command line parameter : {args[i]}");
                     options.ShowHelp = true;
                 }
+            }
+
+            // check options
+            if (!options.ShowHelp && 
+                options.Transport == TransportName.Http && 
+                options.Mode == ModeName.Client &&
+                string.IsNullOrWhiteSpace(options.Hostname))
+            {
+                Console.WriteLine("Must provide a valid hostname when listening to http/https");
+                options.ShowHelp = true;
+            }
+            if (options.Interval <= 0)
+            {
+                Console.WriteLine("Must provide a non-zero and positive interval value");
+                options.ShowHelp = true;
             }
 
             return options;

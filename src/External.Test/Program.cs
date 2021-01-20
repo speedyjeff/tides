@@ -8,7 +8,7 @@ namespace Tides.Test
 	{
 		static void Main(string[] args)
 		{
-			var predictions = new Predictions("test", noahStationId: 9442396, lat: 47.9133f, lng: -124.6369f);
+			var predictions = new Predictions("test", noahStationId: 9442396, lat: 47.9133f, lng: -124.6369f, subnet: "");
 
 			var task = Task.Run(async () =>
 		    {

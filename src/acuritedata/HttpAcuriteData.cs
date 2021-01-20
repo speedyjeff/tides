@@ -8,13 +8,14 @@ using System.Threading.Tasks;
 
 namespace Acurite
 {
-    public class HttpAcuriteData
+    public class HttpAcuriteData : IRemoteAcuriteData
     {
-        public HttpAcuriteData(int port, bool listenLocal)
+        public HttpAcuriteData(int port, string protocol, bool listenLocal)
         {
             Port = port;
             ListenLocal = listenLocal;
             Listening = false;
+            Protocol = protocol;
         }
 
         public event Func<string> OnSend;
@@ -43,15 +44,28 @@ namespace Acurite
 
             // start http lisenter
             var endpoint = new IPEndPoint(ip, Port);
-            var http = new HttpListener();
-            http.Prefixes.Add($"{Protocol}://{endpoint}/{ServiceName}/");
+            var url = $"{Protocol}://{endpoint}/{ServiceName}/";
+            Http = new HttpListener();
+            Http.Prefixes.Add(url);
 
             // start
-            http.Start();
-            Console.WriteLine($"Servering {Protocol}://{endpoint}/{ServiceName}/ ...");
+            Http.Start();
+            Console.WriteLine($"Servering {url} ...");
 
             // async handle the incoming requests
-            HandleIncoming(http);
+            HandleIncoming();
+        }
+
+        public void Close()
+        {
+            if (Http != null)
+            {
+                if (Http.IsListening)
+                {
+                    Http.Close();
+                }
+            }
+            Http = null;
         }
 
         public async Task<string> ReceiveAsync(string hostname)
@@ -63,18 +77,19 @@ namespace Acurite
         #region private
         private int Port;
         private bool ListenLocal;
-        private string Protocol = "http";
+        private HttpListener Http;
+        private string Protocol;
         private volatile bool Listening = false;
         private const string ServiceName = "weather";
 
-        private async void HandleIncoming(HttpListener http)
+        private async void HandleIncoming()
         {
-            while (http.IsListening)
+            while (Http != null && Http.IsListening)
             {
                 try
                 {
                     // block to get request
-                    var context = await http.GetContextAsync();
+                    var context = await Http.GetContextAsync();
                     var contenttype = context.Request.AcceptTypes != null && context.Request.AcceptTypes.Length > 0 ? context.Request.AcceptTypes[0] : "";
 
                     // log the incoming request

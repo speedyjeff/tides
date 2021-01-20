@@ -47,10 +47,10 @@ namespace acuritehub
                 device.Open();
 
                 // on Linux we need to ask the kernel to detach the interface first
-                if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
                     var key = ((long)productid << 32) | ((long)vendorid);
-		    if (!HasConfigured.Contains(key))
+		            if (!HasConfigured.Contains(key))
                     {
                         if (device.DeviceHandle == null) throw new Exception("failed to properly open device");
                         var ec = DetachKernelDriver(device.DeviceHandle, 0);
@@ -149,7 +149,7 @@ namespace acuritehub
             180.0f, // 15
         };
 
-	private HashSet<long> HasConfigured;
+	    private HashSet<long> HasConfigured;
 
         // necessary to ensure the kernel is not using the usb interface
         [DllImport("libusb-1.0.so.0", CallingConvention = CallingConvention.Cdecl, EntryPoint = "libusb_detach_kernel_driver")]

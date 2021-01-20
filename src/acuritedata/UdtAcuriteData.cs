@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Acurite
 {
-    public class UdtAcuriteData
+    public class UdtAcuriteData : IRemoteAcuriteData
     {
         public UdtAcuriteData(int port)
         {
@@ -18,7 +18,7 @@ namespace Acurite
 
         public event Action<string> OnReceived;
 
-        public async void ListenAsync()
+        public async void ReceiveAsync()
         {
             // exit early if already listening
             if (Listening) return;
@@ -39,7 +39,7 @@ namespace Acurite
             }
         }
 
-        public void StopListening()
+        public void Close()
         {
             Listening = false;
             if (UdpListener != null) UdpListener.Close();

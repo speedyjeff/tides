@@ -144,7 +144,7 @@ namespace Clockface
 							case "outtemperature":
 								point.X = padding;
 								point.Y = (rowheight * 2);
-								Canvas.Text(RGBA.White, point, $"current:  {w.Value:f2}°", fontsize, fontname);
+								Canvas.Text(RGBA.White, point, $"current:  {w.Value:f0}°", fontsize, fontname);
 								break;
 							case "outhumidity":
 								point.X = padding;
@@ -169,7 +169,7 @@ namespace Clockface
 							case "raintotal":
 								point.X = padding;
 								point.Y = (rowheight * 6);
-								Canvas.Text(RGBA.White, point, $"rain:      {w.Value:f2} in", fontsize, fontname);
+								Canvas.Text(RGBA.White, point, $"rain:     {w.Value:f2} in", fontsize, fontname);
 								// debug
 								if (true)
 								{

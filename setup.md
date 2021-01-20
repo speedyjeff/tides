@@ -45,6 +45,7 @@ sh> vi /home/tides/launch.sh
   ./directoryserver -port 8000 -dir wwwroot/ -noshutdown &
   sleep 5
   firefox http://127.0.0.1:8000 &
+  sudo shutdown -h 21:00
 sh> chmod +x /home/tides/launch.sh
 sh> mkdir ~/.config/autostart
 sh> vi ~/.config/autostart/.desktop
@@ -67,9 +68,9 @@ sh> unclutter -idle 1 -root &
 ```
 
 * Settings -> Power 
-  * Automatic suspend - when idle 1 hour
+  * Automatic suspend - disabled
   * Power Button Action - power off
-  * Blank screen = never
+  * Blank screen - never
 * Settings -> Notifications -> Do not distrub
   * Printer - no notifications
 
@@ -123,6 +124,28 @@ sh> mkdir /home/acuritehub
 sh> sudo chown -R <user name> acuritehub
 ```
 
+* Setup the code to run on boot
+```
+sh> sudo vi /etc/systemd/system/acuritehub.service
+[Unit]
+Description=AcuriteHub
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=root
+ExecStart=/home/acuritehub/acuritehub
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+sh> systemctl daemon-reload
+sh> systemctl enable acuritehub
+sh> systemctl start acuritehub
+sh> systemctl status acuritehub
+```
+
 #### Update
 
 * [AcuriteHub](https://github.com/speedyjeff/tides/tree/master/src/acuritehub)
@@ -130,11 +153,12 @@ sh> sudo chown -R <user name> acuritehub
 ```
 ftp> put <local dir>acuritehub\bin\Release\net5.0\publish\acuritehub acuritehub
 sh> cd /home/acuritehub
+sh> systemctl stop acuritehub
 sh> cp /home/<ftp user>/acuritehub /home/acuritehub/acuritehub
 sh> chmod +x acuritehub
 ```
 
 #### Run Acurite Hub
 ```
-sh> sudo ./acuritehub
+sh> systemctl start acuritehub
 ```
