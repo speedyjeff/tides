@@ -63,6 +63,7 @@ namespace Clockface
 			var fontsize = 18f * Ratio;
 			var fontname = "Courier New";
 			var point = new Point() { X = 0f, Y = 0f };
+			var avoiddups = new HashSet<string>();
 
 			try
 			{
@@ -75,9 +76,11 @@ namespace Clockface
 				point.Y = (rowheight * 1);
 				Canvas.Text(RGBA.White, point, "Local weather", fontsize, fontname);
 
-				foreach (var w in weather)
+				foreach (var w in weather.OrderByDescending(wr => wr.Date))
                 {
-					switch(w.Type)
+					if (avoiddups.Contains(w.Type)) continue;
+
+					switch (w.Type)
                     {
 						case "temperature":
 							point.X = 0f;
@@ -113,7 +116,7 @@ namespace Clockface
 							point.X = 0f;
 							point.Y = (rowheight * 6);
 							var description = w.StrValue;
-							if (description.Length > 23) description = description.Substring(0, 23) + "...";
+							if (description.Length > 22) description = description.Substring(0, 22) + "..";
 							Canvas.Text(RGBA.White, point, $"{description}", fontsize, fontname);
 							// debug
 							if (true)
@@ -124,13 +127,15 @@ namespace Clockface
 							}
 							break;
                     }
+
+					avoiddups.Add(w.Type);
 				}
 
 				// weather station
 				if (weatherStation.Count > 0)
 				{
-					var padding = (rowheight * 11);
-					var avoiddups = new HashSet<string>();
+					var padding = (rowheight * 10);
+					avoiddups.Clear();
 					point.Y = (rowheight * 1);
 					point.X = padding;
 					Canvas.Text(RGBA.White, point, $"Weather Station", fontsize, fontname);

@@ -133,7 +133,7 @@ namespace Clockface
 						}
 						if (ex.HighDate != default(DateTime))
 						{
-							point.X = (datafontsize * 17f);
+							point.X = (datafontsize * 16f);
 							Canvas.Text(RGBA.White, point, $"{ex.HighDate:hh:mm tt} {(ex.HighValue < 10f ? " " : "")}{ex.HighValue:f2}", datafontsize, datafontname);
 						}
 						prvdate = ex.Date;

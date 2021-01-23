@@ -46,6 +46,9 @@ sh> vi /home/tides/launch.sh
   sleep 5
   firefox http://127.0.0.1:8000 &
   sudo shutdown -h 21:00
+  sudo apt update -y >> log
+  sudo apt upgrade -y >> log
+
 sh> chmod +x /home/tides/launch.sh
 sh> mkdir ~/.config/autostart
 sh> vi ~/.config/autostart/.desktop

@@ -37,6 +37,7 @@ namespace External
 			Latitude = lat;
 			Longitude = lng;
 			WeatherStationAddress = Subnet = null;
+			WeatherStationSearch = 0;
 
 			// check that the subnet is in the following format "#.#.#.";
 			var ipparts = subnet.Split('.');
@@ -136,21 +137,35 @@ namespace External
 			// need to first discover the service
 			if (string.IsNullOrWhiteSpace(Subnet)) return new List<Data>();
 
+			if (WeatherStationSearch > 0)
+            {
+				// a search is in progress;
+				WeatherStationSearch--;
+				return new List<Data>();
+            }
+
 			// discover the service
 			if (string.IsNullOrWhiteSpace(WeatherStationAddress))
             {
-				Console.WriteLine($"{DateTime.Now:o}: scaning the weather station service");
+				// indicate that we are searching
+				WeatherStationSearch = 10;
+
+				Console.WriteLine($"{DateTime.UtcNow:o}: scaning the weather station service");
 				// broadcast a request and record who responded
-				for(int i=1; i<64; i++)
-                {
+				for (int i = 1; i <= 64; i++)
+				{
 					var ip = Subnet + i;
 					var url = string.Format(WeatherStationUrl, ip);
-					if (await QuickCheck(url, millisecondsDelay: 100))
-                    {
+					if (await QuickCheck(url, millisecondsDelay: 600))
+					{
 						WeatherStationAddress = ip;
-                    }
-                }
-            }
+						break;
+					}
+				}
+
+				// clear
+				WeatherStationSearch = 0;
+			}
 
 			// wait until we get a valid address
 			if (string.IsNullOrWhiteSpace(WeatherStationAddress)) return new List<Data>();
@@ -188,6 +203,7 @@ namespace External
 		private float Longitude;
 		private string Subnet;
 		private string WeatherStationAddress;
+		private int WeatherStationSearch;
 
 		private enum PredictionType { Tides, Extremes, Suns, WeatherInfo, Weather, Station };
 		private class PredictionDetails
@@ -626,26 +642,33 @@ namespace External
 					}
 					catch(Exception e)
                     {
-						Console.WriteLine($"Catastrophic failure - {e}");
+						Console.WriteLine($"Catastrophic failure during get - {e}");
 						return new List<Data>();
                     }
 
 					// query for more results
 					foreach (var json in latestjson)
 					{
-						var data = ParseJson(json, type);
-
-						lock (details)
+						try
 						{
-							foreach (var p in data)
+							var data = ParseJson(json, type);
+
+							lock (details)
 							{
-								// add it to the set of predictions
-								var key = $"{p.Date:yyyyMMdd HH mm ss fff}";
-								if (!details.Data.ContainsKey(key))
+								foreach (var p in data)
 								{
-									details.Data.Add(key, p);
+									// add it to the set of predictions
+									var key = $"{p.Date:yyyyMMdd HH mm ss fff}";
+									if (!details.Data.ContainsKey(key))
+									{
+										details.Data.Add(key, p);
+									}
 								}
 							}
+						}
+						catch(Exception e)
+                        {
+							Console.WriteLine($"Failure during parse - {e}");
 						}
 					}
 
