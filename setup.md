@@ -9,6 +9,14 @@
 ![front](https://github.com/speedyjeff/tides/blob/master/media/front.png) 
 ![back](https://github.com/speedyjeff/tides/blob/master/media/back.png) 
 
+### Optional
+
+* [AcuRite 5-in-1 02064 Weather Station ($155)](https://www.amazon.com/AcuRite-Station-Weather-Ticker-Forecast/dp/B0147DCLPC)
+* [Raspberry Pi 4 2GB ($46)](https://www.amazon.com/Raspberry-Model-2019-Quad-Bluetooth/dp/B07TD42S27)
+* [Raspberry Pi 4 case ($9)](https://www.amazon.com/MazerPi-Raspberry-Cooling-Heatsink-Model/dp/B07W3ZMVP1)
+
+![station](https://github.com/speedyjeff/tides/blob/master/media/station.png) 
+
 ## Setup
 
 ### One Time Setup
