@@ -15,7 +15,7 @@
 * [Raspberry Pi 4 2GB ($46)](https://www.amazon.com/Raspberry-Model-2019-Quad-Bluetooth/dp/B07TD42S27)
 * [Raspberry Pi 4 case ($9)](https://www.amazon.com/MazerPi-Raspberry-Cooling-Heatsink-Model/dp/B07W3ZMVP1)
 
-![station](https://github.com/speedyjeff/tides/blob/master/media/station.png) 
+![station](https://github.com/speedyjeff/tides/blob/master/media/station.jpg) 
 
 ## Setup
 
