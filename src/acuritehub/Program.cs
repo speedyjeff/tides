@@ -62,6 +62,7 @@ namespace acuritehub
 
                 // wait and retry
                 System.Threading.Thread.Sleep(options.Interval);
+                GC.KeepAlive(remote);
             }
         }
 

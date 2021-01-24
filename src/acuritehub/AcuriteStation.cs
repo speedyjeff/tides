@@ -205,22 +205,24 @@ namespace acuritehub
 
             // wind speed
             result.windSpeed = (float)(((buffer[4] & 0x1f) << 3) | ((buffer[5] & 0x70) >> 4));
-            if (result.windSpeed > 0) result.windSpeed = (result.windSpeed * 0.8278f) + 1.0f;
+            if (result.windSpeed > 0) result.windSpeed = (result.windSpeed * 0.8278f) + 1.0f; // kph
             result.windSpeed *= 0.62137f; // mph
 
             if ((buffer[3] & 0xf) == 1)
             {
                 // wind direction
-                result.windDirection = WindDirection[buffer[5] & 0x0f]; // degrees
+                var dir = buffer[5] & 0x0f;
+                result.windDirection = WindDirection[(dir >= 0 && dir < WindDirection.Length) ? dir : 0]; // compass degrees
 
                 // rain total
-                result.rainTotal = (((buffer[6] & 0x3f) << 7) | (buffer[7] & 0x7f)) / 100f; // inches
+                result.rainTotal = (((buffer[6] & 0x3f) << 7) | (buffer[7] & 0x7f)) * 0.0254f; // cm
+                result.rainTotal *= 0.39370079f; // inch
             }
             else
             {
                 // outside temperature
-                result.outTemperature = (float)(((buffer[5] & 0x0f) << 7) | (buffer[6] & 0x7f)) / 18.0f - 40.0f;
-                result.outTemperature = result.outTemperature * 1.8f + 32f; // fahrenheit
+                result.outTemperature = (float)(((buffer[5] & 0x0f) << 7) | (buffer[6] & 0x7f)) / 18.0f - 40.0f; // celsius
+                result.outTemperature = (result.outTemperature * 1.8f) + 32f; // fahrenheit
 
                 // outside humidity
                 result.outHumidity = buffer[7] & 0x7f; // percentage
@@ -263,11 +265,11 @@ namespace acuritehub
                 // decode
 
                 // pressure
-                result.pressure = (d1 / 16.0f) - (208f /* + 250f hack */); // mbar
-                result.pressure /= 33.863886667f; // inHg
+                result.pressure = (d1 / 16.0f) - (208f); // mbar
+                result.pressure *= 0.029529983071445f; // inHg
 
                 // inside temperature
-                result.inTemperature = 25.0f + (0.05f * d2);
+                result.inTemperature = 25.0f + (0.05f * d2); // celsius
                 result.inTemperature = (result.inTemperature * 1.8f) + 32f; // fahrenheit
             }
             else

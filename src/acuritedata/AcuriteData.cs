@@ -33,17 +33,17 @@ namespace Acurite
 
             // combine with the most recent favored
             AcuriteData result = new AcuriteData() { utcDate = b.utcDate };
-            if (b.channel.HasValue) result.channel = b.channel; else result.channel = a.channel;
-            if (b.sensorId.HasValue) result.sensorId = b.sensorId; else result.sensorId = a.sensorId;
-            if (b.signal.HasValue) result.signal = b.signal; else result.signal = a.signal;
-            if (b.lowBattery.HasValue) result.lowBattery = b.lowBattery; else result.lowBattery = a.lowBattery;
-            if (b.windSpeed.HasValue) result.windSpeed = b.windSpeed; else result.windSpeed = a.windSpeed;
-            if (b.windDirection.HasValue) result.windDirection = b.windDirection; else result.windDirection = a.windDirection;
-            if (b.rainTotal.HasValue) result.rainTotal = b.rainTotal; else result.rainTotal = a.rainTotal;
-            if (b.outTemperature.HasValue) result.outTemperature = b.outTemperature; else result.outTemperature = a.outTemperature;
-            if (b.outHumidity.HasValue) result.outHumidity = b.outHumidity; else result.outHumidity = a.outHumidity;
-            if (b.pressure.HasValue) result.pressure = b.pressure; else result.pressure = a.pressure;
-            if (b.inTemperature.HasValue) result.inTemperature = b.inTemperature; else result.inTemperature = a.inTemperature;
+            result.channel = (b.channel.HasValue) ? b.channel : a.channel;
+            result.sensorId = (b.sensorId.HasValue) ? b.sensorId : a.sensorId;
+            result.signal = (b.signal.HasValue) ? b.signal : a.signal;
+            result.lowBattery = (b.lowBattery.HasValue) ? b.lowBattery : a.lowBattery;
+            result.windSpeed = (b.windSpeed.HasValue) ? b.windSpeed : a.windSpeed;
+            result.windDirection = (b.windDirection.HasValue) ? b.windDirection : a.windDirection;
+            result.rainTotal = (b.rainTotal.HasValue) ? b.rainTotal : a.rainTotal;
+            result.outTemperature = (b.outTemperature.HasValue) ? b.outTemperature : a.outTemperature;
+            result.outHumidity = (b.outHumidity.HasValue) ? b.outHumidity : a.outHumidity;
+            result.pressure = (b.pressure.HasValue) ? b.pressure : a.pressure;
+            result.inTemperature = (b.inTemperature.HasValue) ? b.inTemperature : a.inTemperature;
 
             return result;
         }
