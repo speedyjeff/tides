@@ -202,11 +202,14 @@ namespace Clockface
 						point.Y = (rowheight * 5);
 						Canvas.Text(RGBA.White, point, $"{data.windSpeed:f0} mph", fontsize, fontname);
 					}
-					if (data.rainTotalTrend != null && data.rainTotalTrend.Length >= 1)
+					if (data.rainTotal.HasValue)
 					{
 						point.X = padding;
 						point.Y = (rowheight * 6);
-						Canvas.Text(RGBA.White, point, $"rain:     {(data.rainTotalTrend[0] - data.rainTotalTrend[data.rainTotalTrend.Length-1]):f2} in", fontsize, fontname);
+						var rainTotal = data.rainTotal;
+						if (data.rainTotalTrend != null && data.rainTotalTrend.Length >= 1) rainTotal -= data.rainTotalTrend[data.rainTotalTrend.Length - 1];
+						Canvas.Text(RGBA.White, point, $"rain:     {rainTotal:f2} in", fontsize, fontname);
+
 						// debug
 						if (true)
 						{
@@ -267,14 +270,6 @@ namespace Clockface
 				else if (allpressures.Length >= 2)
 				{
 					delta = pressure - allpressures[1];
-
-					// check if the pressure has changed twice (V shape)
-					var sdelta = pressure - allpressures[0];
-
-					// choose the more recent reading to compare too (when in V shape)
-					if (sdelta <= 0f && delta >= 0f) delta = sdelta;
-					else if (sdelta >= 0f && delta <= 0f) delta = sdelta;
-
 				}
 				else delta = 0f;
 
