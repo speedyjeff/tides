@@ -78,8 +78,8 @@ namespace acuritehub
                 }
 
                 // read reports
-                if (!ReadReport1(device, ref result)) throw new Exception("Failed to access report 1");
-                if (!ReadReport2(device, ref result)) throw new Exception("Failed to access report 2");
+                if (!ReadReport1(device, ref result)) Console.WriteLine($"{DateTime.Now:o}: Failed to access report 1");
+                if (!ReadReport2(device, ref result)) Console.WriteLine($"{DateTime.Now:o}: Failed to access report 2");
             }
             finally
             {
@@ -159,30 +159,42 @@ namespace acuritehub
         {
             var buffer = new byte[10];
 
-            if (!Read(device, report: 1, buffer)) throw new Exception("Failed to read data");
+            if (!Read(device, report: 1, buffer))
+            {
+                Console.WriteLine($"{DateTime.Now:o}: Failed to read report 1");
+                return false;
+            }
 
             // ensure valid
-            if (buffer.Length != 10 || buffer[0] != 0x01) throw new Exception("Invalid report 1 data");
+            if (buffer.Length != 10 || buffer[0] != 0x01)
+            {
+                Console.WriteLine($"{DateTime.Now:o}: Invalid data from hub");
+                return false;
+            }
 
             // check for errors
             if ((buffer[1] & 0x0f) == 0x0f && buffer[3] == 0xff)
             {
                 // no sensor data
+                Console.WriteLine($"{DateTime.Now:o}: No sensor data");
                 return false;
             }
             else if ((buffer[3] & 0x0f) != 1 && (buffer[3] & 0x0f) != 8)
             {
                 // bogus message flavor
+                Console.WriteLine($"{DateTime.Now:o}: Bogus message flavor");
                 return false;
             }
             else if (buffer[9] != 0xff && buffer[9] != 0x0)
             {
                 // bogus final byte
+                Console.WriteLine($"{DateTime.Now:o}: Bogus final byte");
                 return false;
             }
             else if ((buffer[8] & 0x0f) < 0 || (buffer[8] & 0x0f) > 3)
             {
                 // bogus signal strength
+                Console.WriteLine($"{DateTime.Now:o}: Bogus signal strength");
                 return false;
             }
 
@@ -198,7 +210,10 @@ namespace acuritehub
             result.signal = (SignalStrength)(buffer[8] & 0x0f);
 
             // stale data
-            if (result.signal == SignalStrength.None) return false;
+            if (result.signal == SignalStrength.None)
+            {
+                Console.WriteLine($"{DateTime.Now:o}: Invalid signal strength");
+            }
 
             // low battery
             result.lowBattery = ((buffer[3] & 0xf0) >> 4) != 0x7;
@@ -215,8 +230,7 @@ namespace acuritehub
                 result.windDirection = WindDirection[(dir >= 0 && dir < WindDirection.Length) ? dir : 0]; // compass degrees
 
                 // rain total
-                result.rainTotal = (((buffer[6] & 0x3f) << 7) | (buffer[7] & 0x7f)) * 0.0254f; // cm
-                result.rainTotal *= 0.39370079f; // inch
+                result.rainTotal = (float)(((buffer[6] & 0x3f) << 7) | (buffer[7] & 0x7f)) * 0.01f; // inch
             }
             else
             {
@@ -235,10 +249,18 @@ namespace acuritehub
         {
             var buffer = new byte[25];
 
-            if (!Read(device, report: 2, buffer)) throw new Exception("Failed to read data");
+            if (!Read(device, report: 2, buffer))
+            {
+                Console.WriteLine($"{DateTime.Now:o}: Failed to read report 2");
+                return false;
+            }
 
             // ensure valid
-            if (buffer.Length != 25 || buffer[0] != 0x02) throw new Exception("Invalid report 2 data");
+            if (buffer.Length != 25 || buffer[0] != 0x02)
+            {
+                Console.WriteLine($"{DateTime.Now:o}: Invalid data in report 2");
+                return false;
+            }
 
             // constants
             var c1 = ((buffer[3] << 8) + buffer[4]);
@@ -266,7 +288,8 @@ namespace acuritehub
 
                 // pressure
                 result.pressure = (d1 / 16.0f) - (208f); // mbar
-                result.pressure *= 0.029529983071445f; // inHg
+                result.pressure *= 0.029529983071f; // inHg
+                result.pressure += 0.08106f; // hack (the hub seems this much off this conversion)
 
                 // inside temperature
                 result.inTemperature = 25.0f + (0.05f * d2); // celsius
@@ -274,6 +297,7 @@ namespace acuritehub
             }
             else
             {
+                Console.WriteLine($"{DateTime.Now:o}: Failed to receive the right constants in report 2");
                 return false;
             }
 

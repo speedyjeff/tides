@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Acurite;
 using External;
 
 namespace Tides.Test
@@ -17,6 +18,8 @@ namespace Tides.Test
 			    sum += await Suns(predictions);
 			    sum += await Weather(predictions);
 				sum += await WeatherStation(predictions);
+
+				AcuriteDataTest();
 
 			   Console.WriteLine($"sum = {sum}");
 		    });
@@ -147,6 +150,28 @@ namespace Tides.Test
 			if (weather.Count == 0 || querycount != previousquerycount) throw new Exception($"Invalid query : {weather.Count} {querycount}");
 
 			return 0;
+		}
+
+		private static void AcuriteDataTest()
+        {
+			var a = new AcuriteData();
+			a.utcDate = new DateTime(2020, 1, 1);
+			a.pressure = 30;
+			var b = new AcuriteData();
+			b.utcDate = new DateTime(2021, 1, 1);
+			b.pressure = 31;
+
+			var c = a + b;
+
+			Console.WriteLine($"{c.pressure} {(c.pressureTrend == null ? "null" : c.pressureTrend[0]+"")}");
+
+			var d = new AcuriteData();
+			d.utcDate = new DateTime(2021, 2, 1);
+			d.pressure = 32;
+
+			var e = c + d;
+
+			Console.WriteLine($"{e.pressure} {(e.pressureTrend == null ? "null" : e.pressureTrend[0] + "")}");
 		}
 	}
 }

@@ -6,6 +6,9 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
+// todo OPTIONS request should be handled this way
+// https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/OPTIONS
+
 namespace Acurite
 {
     public class HttpAcuriteData : IRemoteAcuriteData

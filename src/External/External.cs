@@ -18,9 +18,13 @@ namespace External
 {
 	public struct Data
 	{
+		// date
 		public DateTime Date;
+		// variant style returning data
 		public float Value;
 		public string StrValue;
+		public float[] Values;
+		// type of the Data
 		public string Type;
 	}
 
@@ -254,6 +258,8 @@ namespace External
 		private static readonly byte[] s_InTemperature = System.Text.Encoding.UTF8.GetBytes("inTemperature");
 		private static readonly byte[] s_OutHumidity = System.Text.Encoding.UTF8.GetBytes("outHumidity");
 		private static readonly byte[] s_Pressure = System.Text.Encoding.UTF8.GetBytes("pressure");
+		private static readonly byte[] s_PressureTrend = System.Text.Encoding.UTF8.GetBytes("pressureTrend");
+		private static readonly byte[] s_RainTotalTrend = System.Text.Encoding.UTF8.GetBytes("rainTotalTrend");
 
 		private List<Data> ParseJson(string json, PredictionType type)
 		{
@@ -284,10 +290,14 @@ namespace External
 			var pressureseen = false;
 			var intemperatureseen = false;
 			var collectweather = false;
+			var pressuretrendseen = false;
+			var raintotaltrendseen = false;
 			var results = new List<Data>();
 			var p = default(Data);
 			var min = default(Data);
 			var max = default(Data);
+			var pressuretrend = new List<float>();
+			var raintotaltrend = new List<float>();
 			var count = 0;
 			while(reader.Read())
 			{
@@ -552,6 +562,42 @@ namespace External
 						p.Date = p.Date.AddMilliseconds(10);
 						results.Add(new Data() { Date = p.Date, Value = Convert.ToSingle(System.Text.Encoding.UTF8.GetString(reader.ValueSpan)), Type = "pressure" });
 						pressureseen = false;
+					}
+
+					pressuretrendseen |= (reader.TokenType == JsonTokenType.PropertyName && reader.ValueSpan.SequenceEqual(s_PressureTrend));
+					if (pressuretrendseen && reader.TokenType == JsonTokenType.Null) pressuretrendseen = false;
+					if (pressuretrendseen && reader.TokenType == JsonTokenType.StartArray)
+                    {
+						pressuretrend.Clear();
+                    }
+					if (pressuretrendseen && reader.TokenType == JsonTokenType.Number)
+					{
+						pressuretrend.Add( Convert.ToSingle( System.Text.Encoding.UTF8.GetString(reader.ValueSpan) ));
+					}
+					if (pressuretrendseen && reader.TokenType == JsonTokenType.EndArray)
+                    {
+						p.Date = p.Date.AddMilliseconds(10);
+						results.Add(new Data() { Date = p.Date, Values = pressuretrend.ToArray(), Type = "pressuretrend" });
+						pressuretrendseen = false;
+						pressuretrend.Clear();
+					}
+
+					raintotaltrendseen |= (reader.TokenType == JsonTokenType.PropertyName && reader.ValueSpan.SequenceEqual(s_RainTotalTrend));
+					if (raintotaltrendseen && reader.TokenType == JsonTokenType.Null) raintotaltrendseen = false;
+					if (raintotaltrendseen && reader.TokenType == JsonTokenType.StartArray)
+					{
+						raintotaltrend.Clear();
+					}
+					if (raintotaltrendseen && reader.TokenType == JsonTokenType.Number)
+					{
+						raintotaltrend.Add(Convert.ToSingle(System.Text.Encoding.UTF8.GetString(reader.ValueSpan)));
+					}
+					if (raintotaltrendseen && reader.TokenType == JsonTokenType.EndArray)
+					{
+						p.Date = p.Date.AddMilliseconds(10);
+						results.Add(new Data() { Date = p.Date, Values = raintotaltrend.ToArray(), Type = "raintotaltrend" });
+						raintotaltrendseen = false;
+						raintotaltrend.Clear();
 					}
 				} // (type == PredictionType.Station)
 			} // while(reader.Read())

@@ -185,7 +185,7 @@ namespace acuritehub
                     // display
                     var data = combined;
                     if (options.RawData) data = current;
-                    Console.WriteLine($"{DateTime.Now:o}: {data.channel},{data.sensorId},{data.signal},{data.lowBattery},{data.windSpeed},{data.windDirection},{data.rainTotal},{data.outTemperature},{data.outHumidity},{data.pressure},{data.inTemperature}");
+                    Console.WriteLine($"{DateTime.Now:o}:{(options.RawData ? " [raw]" : "")} {data.channel},{data.sensorId},{data.signal},{data.lowBattery},{data.windSpeed},{data.windDirection},{data.rainTotal},{data.outTemperature},{data.outHumidity},{data.pressure},{data.inTemperature},{(data.pressureTrend != null ? data.pressureTrend.Length: 0)},{(data.rainTotalTrend != null ? data.rainTotalTrend.Length : 0)}");
 
                     // notifiy of data
                     if (OnPolled != null) OnPolled(data);
