@@ -18,6 +18,7 @@ namespace acuritehub
         public string Protocol;
         public string Hostname;
         public int Interval;
+        public int SleepPolling;
 
         public Options()
         {
@@ -28,12 +29,13 @@ namespace acuritehub
             Transport = TransportName.Http;
             Protocol = "http";
             Hostname = "";
-            Interval = 5000;
+            Interval = 5000; // ms
+            SleepPolling = 600000; // ms  (10 minutes)
         }
 
         public static int DisplayHelp()
         {
-            Console.WriteLine("./acuritehub [-port ####] [-mode list|client|server] [-transport udp|http|https] [-vendorid ####] [-productid ####] [-raw] [-hostname ...] [-interval ####]");
+            Console.WriteLine("./acuritehub [-port ####] [-mode list|client|server] [-transport udp|http|https] [-vendorid ####] [-productid ####] [-raw] [-hostname ...] [-interval ####] [-sleeppoll ####]");
             return 1;
         }
 
@@ -113,6 +115,14 @@ namespace acuritehub
                             options.Transport = TransportName.Http;
                             options.Protocol = "https";
                         }
+                    }
+                }
+                else if (string.Equals(args[i], "-sleeppoll", StringComparison.OrdinalIgnoreCase))
+                {
+                    i++;
+                    if (i < args.Length)
+                    {
+                        if (Int32.TryParse(args[i], out int sleep)) options.SleepPolling = sleep;
                     }
                 }
                 else

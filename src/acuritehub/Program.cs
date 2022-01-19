@@ -7,6 +7,7 @@ using LibUsbDotNet.Main;
 using LibUsbDotNet.Info;
 
 using Acurite;
+using System.Diagnostics;
 
 namespace acuritehub
 {
@@ -38,6 +39,11 @@ namespace acuritehub
 
                         // server
                         case ModeName.Server:
+                            // start the last net polling stopwatch (polling the device times out after inuse)
+                            program.LastNetQuery = new Stopwatch();
+                            program.LastNetQuery.Start();
+
+                            // start server
                             if (options.Transport == TransportName.Udp) remote = program.UdpSendAsync(options);
                             else if (options.Transport == TransportName.Http) remote = program.HttpSendAsync(options);
 
@@ -68,6 +74,7 @@ namespace acuritehub
 
         #region private
         private event Action<AcuriteData> OnPolled;
+        private Stopwatch LastNetQuery;
 
         private static void List()
         {
@@ -81,6 +88,8 @@ namespace acuritehub
         //
         // Udp
         //
+
+        // client
         private IRemoteAcuriteData UdpReceiveAsync(Options options)
         {
             // wait to receive data from the server
@@ -95,6 +104,7 @@ namespace acuritehub
             return remote;
         }
 
+        // server
         private IRemoteAcuriteData UdpSendAsync(Options options)
         {
             // setup to send data via udp
@@ -103,6 +113,11 @@ namespace acuritehub
             // subscribe to notifications when data is polled
             OnPolled += async (data) =>
             {
+                // reset the stopwatch and restart
+                LastNetQuery.Reset();
+                LastNetQuery.Start();
+
+                // serialize the most current data
                 var json = System.Text.Json.JsonSerializer.Serialize<AcuriteData>(data);
                 await remote.SendAsync(json);
             };
@@ -113,6 +128,8 @@ namespace acuritehub
         //
         // Http
         //
+
+        // client
         private async void HttpReceiveAsync(Options options)
         {
             var http = new HttpAcuriteData(options.Port, options.Protocol, listenLocal: true);
@@ -135,6 +152,7 @@ namespace acuritehub
             }
         }
 
+        // server
         private IRemoteAcuriteData HttpSendAsync(Options options)
         {
             var http = new HttpAcuriteData(options.Port, options.Protocol, listenLocal: false);
@@ -149,6 +167,11 @@ namespace acuritehub
             // serialize upon request
             http.OnSend += () =>
             {
+                // reset the stopwatch and restart
+                LastNetQuery.Reset();
+                LastNetQuery.Start();
+
+                // serialize the most current data
                 var json = System.Text.Json.JsonSerializer.Serialize<AcuriteData>(current);
                 return json;
             };
@@ -171,24 +194,28 @@ namespace acuritehub
             // poll the station until asked to stop
             while (true)
             {
-                // read data
-                AcuriteData current;
-                if (options.VendorId.HasValue && options.ProductId.HasValue) current = station.Read(options.VendorId.Value, options.ProductId.Value);
-                else current = station.Read();
-
-                // send if there is data
-                if (current.HasValue())
+                // check if the poll timeout has occured (in which case, skip this station read)
+                if (LastNetQuery.ElapsedMilliseconds < options.SleepPolling)
                 {
-                    // combine the data into a view of the latest
-                    combined = combined + current;
+                    // read data
+                    AcuriteData current;
+                    if (options.VendorId.HasValue && options.ProductId.HasValue) current = station.Read(options.VendorId.Value, options.ProductId.Value);
+                    else current = station.Read();
 
-                    // display
-                    var data = combined;
-                    if (options.RawData) data = current;
-                    Console.WriteLine($"{DateTime.Now:o}:{(options.RawData ? " [raw]" : "")} {data.channel},{data.sensorId},{data.signal},{data.lowBattery},{data.windSpeed},{data.windDirection},{data.rainTotal},{data.outTemperature},{data.outHumidity},{data.pressure},{data.inTemperature},{(data.pressureTrend != null ? data.pressureTrend.Length: 0)},{(data.rainTotalTrend != null ? data.rainTotalTrend.Length : 0)}");
+                    // send if there is data
+                    if (current.HasValue())
+                    {
+                        // combine the data into a view of the latest
+                        combined = combined + current;
 
-                    // notifiy of data
-                    if (OnPolled != null) OnPolled(data);
+                        // display
+                        var data = combined;
+                        if (options.RawData) data = current;
+                        Console.WriteLine($"{DateTime.Now:o}:{(options.RawData ? " [raw]" : "")} {data.channel},{data.sensorId},{data.signal},{data.lowBattery},{data.windSpeed},{data.windDirection},{data.rainTotal},{data.outTemperature},{data.outHumidity},{data.pressure},{data.inTemperature},{(data.pressureTrend != null ? data.pressureTrend.Length : 0)},{(data.rainTotalTrend != null ? data.rainTotalTrend.Length : 0)}");
+
+                        // notifiy of data
+                        if (OnPolled != null) OnPolled(data);
+                    }
                 }
 
                 System.Threading.Thread.Sleep(options.Interval);

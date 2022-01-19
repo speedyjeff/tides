@@ -49,13 +49,13 @@ sh> sudo mkdir /home/tides
 sh> sudo chown -R <user name> tides
 sh> vi /home/tides/launch.sh
   cd /home/tides
+  dt=$(date)
+  echo $dt $HOSTNAME > log
   unclutter -idle 1 -root &
-  ./directoryserver -port 8000 -dir wwwroot/ -noshutdown &
+  ./directoryserver -port 8000 -dir wwwroot/ -noshutdown >> log &
   sleep 5
+  ps -aux | grep -i server >> log
   firefox http://127.0.0.1:8000 &
-  sudo shutdown -h 21:00
-  sudo apt update -y >> log
-  sudo apt upgrade -y >> log
 
 sh> chmod +x /home/tides/launch.sh
 sh> mkdir ~/.config/autostart
