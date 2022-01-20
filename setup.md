@@ -40,6 +40,12 @@ sh> sudo systemctl status vsftpd
 
 * Create ftp user
 
+* Disable system update reminders
+```
+sudo systemctl disable apt-daily.service apt-daily-upgrade.service
+sudo systemctl disable apt-daily.timer apt-daily-upgrade.timer
+```
+
 ### Tidal Clock
 
 #### One Time Setup

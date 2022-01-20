@@ -18,7 +18,7 @@ namespace acuritehub
         public string Protocol;
         public string Hostname;
         public int Interval;
-        public int SleepPolling;
+        public long SleepPolling;
 
         public Options()
         {
@@ -122,7 +122,7 @@ namespace acuritehub
                     i++;
                     if (i < args.Length)
                     {
-                        if (Int32.TryParse(args[i], out int sleep)) options.SleepPolling = sleep;
+                        if (Int64.TryParse(args[i], out long sleep)) options.SleepPolling = sleep;
                     }
                 }
                 else
