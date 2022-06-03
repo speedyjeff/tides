@@ -119,7 +119,8 @@ namespace Acurite
                     var buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
                     context.Response.ContentLength64 = buffer.Length;
                     context.Response.ContentType = contenttype;
-                    context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+                    // disabling this CORS header, as the browser has its own disable mechanism and they are not matching
+                    //context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
                     using (var output = context.Response.OutputStream)
                     {
                         await output.WriteAsync(buffer, 0, buffer.Length);
