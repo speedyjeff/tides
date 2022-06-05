@@ -61,14 +61,12 @@ namespace acuritehub
                 {
                     Console.WriteLine($"{DateTime.Now:o}: catastrophic failure {e.Message}");
                 }
-                finally
-                {
-                    if (remote != null) remote.Close();
-                }
 
                 // wait and retry
                 System.Threading.Thread.Sleep(options.Interval);
-                GC.KeepAlive(remote);
+
+                // close out before the next restart
+                if (remote != null) remote.Close();
             }
         }
 

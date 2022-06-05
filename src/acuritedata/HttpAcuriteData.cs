@@ -19,11 +19,12 @@ namespace Acurite
             ListenLocal = listenLocal;
             Listening = false;
             Protocol = protocol;
+            Http = null;
         }
 
         public event Func<string> OnSend;
 
-        public void SendAsync()
+        public async void SendAsync()
         {
             if (Listening) return;
 
@@ -55,8 +56,43 @@ namespace Acurite
             Http.Start();
             Console.WriteLine($"Servering {url} ...");
 
-            // async handle the incoming requests
-            HandleIncoming();
+            while (Http != null && Http.IsListening)
+            {
+                // block to get request
+                var context = await Http.GetContextAsync();
+                var contenttype = context.Request.AcceptTypes != null && context.Request.AcceptTypes.Length > 0 ? context.Request.AcceptTypes[0] : "";
+
+                // log the incoming request
+                Console.Write($"{System.Threading.Thread.CurrentThread.ManagedThreadId} {DateTime.Now:o} \"{context.Request.HttpMethod} {contenttype} {Protocol}/{context.Request.RawUrl} {context.Request.ProtocolVersion}\" ");
+
+                // get context to send
+                var responseString = "";
+                if (OnSend != null)
+                {
+                    responseString = OnSend();
+                    contenttype = "application/json";
+                    context.Response.StatusCode = 200;
+                }
+                else
+                {
+                    contenttype = "text/text";
+                    context.Response.StatusCode = 404;
+                }
+
+                // log the response
+                Console.WriteLine($"{responseString.Length} {context.Response.StatusCode}");
+
+                // write
+                var buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
+                context.Response.ContentLength64 = buffer.Length;
+                context.Response.ContentType = contenttype;
+                // disabling this CORS header, as the browser has its own disable mechanism and they are not matching
+                //context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+                using (var output = context.Response.OutputStream)
+                {
+                    await output.WriteAsync(buffer, 0, buffer.Length);
+                }
+            }
         }
 
         public void Close()
@@ -84,54 +120,6 @@ namespace Acurite
         private string Protocol;
         private volatile bool Listening = false;
         private const string ServiceName = "weather";
-
-        private async void HandleIncoming()
-        {
-            while (Http != null && Http.IsListening)
-            {
-                try
-                {
-                    // block to get request
-                    var context = await Http.GetContextAsync();
-                    var contenttype = context.Request.AcceptTypes != null && context.Request.AcceptTypes.Length > 0 ? context.Request.AcceptTypes[0] : "";
-
-                    // log the incoming request
-                    Console.Write($"{System.Threading.Thread.CurrentThread.ManagedThreadId} {DateTime.Now:o} \"{context.Request.HttpMethod} {contenttype} {Protocol}/{context.Request.RawUrl} {context.Request.ProtocolVersion}\" ");
-
-                    // get context to send
-                    var responseString = "";
-                    if (OnSend != null)
-                    {
-                        responseString = OnSend();
-                        contenttype = "application/json";
-                        context.Response.StatusCode = 200;
-                    }
-                    else
-                    {
-                        contenttype = "text/text";
-                        context.Response.StatusCode = 404;
-                    }
-
-                    // log the response
-                    Console.WriteLine($"{responseString.Length} {context.Response.StatusCode}");
-
-                    // write
-                    var buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
-                    context.Response.ContentLength64 = buffer.Length;
-                    context.Response.ContentType = contenttype;
-                    // disabling this CORS header, as the browser has its own disable mechanism and they are not matching
-                    //context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-                    using (var output = context.Response.OutputStream)
-                    {
-                        await output.WriteAsync(buffer, 0, buffer.Length);
-                    }
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine($"exception : {e}");
-                }
-            }
-        }
 
         private async Task<string> GetWebJson(string url)
         {

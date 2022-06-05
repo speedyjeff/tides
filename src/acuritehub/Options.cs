@@ -29,7 +29,7 @@ namespace acuritehub
             Transport = TransportName.Http;
             Protocol = "http";
             Hostname = "";
-            Interval = 5000; // ms
+            Interval = 500; // ms
             SleepPolling = 600000; // ms  (10 minutes)
         }
 
