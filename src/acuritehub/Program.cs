@@ -190,6 +190,7 @@ namespace acuritehub
             var combined = new AcuriteData();
 
             // poll the station until asked to stop
+            var failCount = 0;
             while (true)
             {
                 // check if the poll timeout has occured (in which case, skip this station read)
@@ -201,8 +202,17 @@ namespace acuritehub
                     else current = station.Read();
 
                     // send if there is data
-                    if (current.HasValue())
+                    if (!current.HasValue())
                     {
+                        failCount++;
+                        Console.WriteLine($"{DateTime.Now:o}: failed to get a station reading");
+                        if (failCount >= options.MaxPollFailures) throw new Exception($"Failed to get station data {failCount} in a row");
+                    }
+                    else
+                    {
+                        // reset fail count (if set)
+                        failCount = 0;
+
                         // combine the data into a view of the latest
                         combined = combined + current;
 

@@ -19,6 +19,7 @@ namespace acuritehub
         public string Hostname;
         public int Interval;
         public long SleepPolling;
+        public int MaxPollFailures;
 
         public Options()
         {
@@ -31,11 +32,12 @@ namespace acuritehub
             Hostname = "";
             Interval = 500; // ms
             SleepPolling = 600000; // ms  (10 minutes)
+            MaxPollFailures = 100; // times (wall clock is Interval * PollFailureMax ms)
         }
 
         public static int DisplayHelp()
         {
-            Console.WriteLine("./acuritehub [-port ####] [-mode list|client|server] [-transport udp|http|https] [-vendorid ####] [-productid ####] [-raw] [-hostname ...] [-interval ####] [-sleeppoll ####]");
+            Console.WriteLine("./acuritehub [-port ####] [-mode list|client|server] [-transport udp|http|https] [-vendorid ####] [-productid ####] [-raw] [-hostname ...] [-interval ####] [-sleeppoll ####] [-maxpollfailures ###]");
             return 1;
         }
 
@@ -123,6 +125,14 @@ namespace acuritehub
                     if (i < args.Length)
                     {
                         if (Int64.TryParse(args[i], out long sleep)) options.SleepPolling = sleep;
+                    }
+                }
+                else if (string.Equals(args[i], "-maxpollfailures", StringComparison.OrdinalIgnoreCase))
+                {
+                    i++;
+                    if (i < args.Length)
+                    {
+                        if (Int32.TryParse(args[i], out int max)) options.MaxPollFailures = max;
                     }
                 }
                 else

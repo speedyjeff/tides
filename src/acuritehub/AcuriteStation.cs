@@ -39,7 +39,8 @@ namespace acuritehub
             // find the device
             var device = Context.Find((usb) => usb.ProductId == productid && usb.VendorId == vendorid);
 
-            if (device == null) throw new Exception("Failed to access the weather station");
+            // check if we are unable to return a result
+            if (device == null) return result;
 
             try
             {
