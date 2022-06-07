@@ -30,9 +30,9 @@ namespace acuritehub
             Transport = TransportName.Http;
             Protocol = "http";
             Hostname = "";
-            Interval = 500; // ms
+            Interval = 5000; // ms
             SleepPolling = 600000; // ms  (10 minutes)
-            MaxPollFailures = 100; // times (wall clock is Interval * PollFailureMax ms)
+            MaxPollFailures = 200; // times (wall clock is Interval * PollFailureMax ms)
         }
 
         public static int DisplayHelp()
