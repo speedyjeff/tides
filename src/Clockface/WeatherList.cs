@@ -14,7 +14,7 @@ namespace Clockface
 {
     public class WeatherList
     {
-		public WeatherList(ICanvas canvas, Predictions external)
+		public WeatherList(ICanvas canvas, IPredictions external)
 		{
 			if (canvas == null || external == null) throw new Exception("must pass in valid canvas and predictions");
 
@@ -31,7 +31,7 @@ namespace Clockface
 
 		#region private
 		private ICanvas Canvas;
-		private Predictions Prediction;
+		private IPredictions Prediction;
 		private Timer FrameTimer;
 		private int FrameLock = 0;
 		private float Ratio;

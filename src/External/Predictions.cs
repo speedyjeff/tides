@@ -16,19 +16,7 @@ using Acurite;
 
 namespace External
 {
-	public struct Data
-	{
-		// date
-		public DateTime Date;
-		// variant style returning data
-		public float Value;
-		public string StrValue;
-		public float[] Values;
-		// type of the Data
-		public string Type;
-	}
-
-	public class Predictions
+	public class Predictions : IPredictions
 	{
 		public Predictions(string location, int noahStationId, float lat, float lng, string subnet)
 		{
@@ -60,7 +48,7 @@ namespace External
             }
 		}
 
-		public string Location { get; private set; }
+		public string Location { get; set; }
 
 		public async Task<List<Data>> CurrentTides()
 		{
@@ -198,6 +186,7 @@ namespace External
 			});
 		}
 
+		// test only
 		public event Action OnQuery;
 
 		#region private

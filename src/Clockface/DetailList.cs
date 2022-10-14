@@ -11,7 +11,7 @@ namespace Clockface
 {
     public class DetailList
     {
-		public DetailList(ICanvas canvas, Predictions external)
+		public DetailList(ICanvas canvas, IPredictions external)
 		{
 			if (canvas == null || external == null) throw new Exception("must pass in valid canvas and predictions");
 
@@ -28,7 +28,7 @@ namespace Clockface
 
 		#region private
 		private ICanvas Canvas;
-		private Predictions Prediction;
+		private IPredictions Prediction;
 		private Timer FrameTimer;
 		private int FrameLock = 0;
 		private float Ratio;

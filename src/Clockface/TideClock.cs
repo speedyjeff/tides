@@ -11,7 +11,7 @@ namespace Clockface
 {
 	public class TideClock
 	{
-		public TideClock(ICanvas canvas, Predictions external, bool lowresolution = false)
+		public TideClock(ICanvas canvas, IPredictions external, bool lowresolution = false)
 		{
 			if (canvas == null || external == null) throw new Exception("must pass in valid canvas and predictions");
 
@@ -29,7 +29,7 @@ namespace Clockface
 
 		#region private
 		private ICanvas Canvas;
-		private Predictions Prediction;
+		private IPredictions Prediction;
 		private Timer FrameTimer;
 		private int FrameLock = 0;
 		private float Angle;

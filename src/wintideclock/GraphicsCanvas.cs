@@ -162,6 +162,9 @@ namespace wintideclock
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private Font GetCachedFont(string name, float size)
 		{
+			// apply an overall reduction to font size
+			size *= 0.25f;
+
 			Dictionary<float, Font> fonts = null;
 			if (!FontCache.TryGetValue(name, out fonts))
 			{
