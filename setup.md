@@ -54,14 +54,14 @@ sudo systemctl disable apt-daily.timer apt-daily-upgrade.timer
 sh> sudo mkdir /home/tides
 sh> sudo chown -R <user name> tides
 sh> vi /home/tides/launch.sh
-  cd /home/tides
+  cd /home/tides/publish
   dt=$(date)
   echo $dt $HOSTNAME > log
   unclutter -idle 1 -root &
-  ./directoryserver -port 8000 -dir wwwroot/ -noshutdown >> log &
+  ./tidalclock.server >> log &
   sleep 5
   ps -aux | grep -i server >> log
-  firefox http://127.0.0.1:8000 &
+  firefox http://localhost:5000 &
 
 sh> chmod +x /home/tides/launch.sh
 sh> mkdir ~/.config/autostart
@@ -93,23 +93,15 @@ sh> unclutter -idle 1 -root &
 
 #### Update
 
-* [Http file server](https://github.com/speedyjeff/directoryserver)
-  * Publish as 'Release + linux-arm32 + self-contained + trimmed + single file'
-```
-ftp> put <local dir>\directoryserver\directoryserver\bin\Release\net5.0\publish\directoryserver directoryserver
-sh> cd /home/tides
-sh> cp /home/<ftp user>/directoryserver /home/tides/directoryserver
-sh> chmod +x directoryserver
-```
-
 * [Tidal Clock](https://github.com/speedyjeff/tides)
-  * Publish as 'Release + browser-wasm'
+  * Publish as 'Release + linux-arm'
 ```
-cmd> cd src\tidalclock\bin\Release\net5.0\browser-wasm\publish
-cmd> tar -cf tidalclock.tar .
-ftp> put <local dir>\src\tidalclock\bin\Release\net5.0\browser-wasm\publish\tidalclock.tar tidalclock.tar
+cmd> cd src\tidalclock\bin\Release\net7.0
+cmd> tar -cf tidalclock.tar publish\.
+ftp> put <local dir>\src\tidalclock\bin\Release\net7.0\tidalclock.tar tidalclock.tar
 sh> cd /home/tides
-sh> sudo tar -xf ../<ftp user>/tidalclock.tar .
+sh> sudo tar -xf ../<ftp user>/tidalclock.tar
+sh> chmod +x publish/tidalclock.server
 ```
 
 #### Run tidal clock
@@ -117,8 +109,8 @@ sh> sudo tar -xf ../<ftp user>/tidalclock.tar .
 sh> cd /home/tides
 sh> ./launch.sh
 OR
-sh> ./directoryserver -port 8000 -dir wwwroot/ -noshutdown &
-sh> firefox http://127.0.0.1:8000 &
+sh> ./tidalclock.server &
+sh> firefox http://localhost:5000 &
 ```
 
 ### Weather Station Hub
