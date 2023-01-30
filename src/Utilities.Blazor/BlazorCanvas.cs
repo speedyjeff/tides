@@ -8,6 +8,7 @@ namespace Utilities.Blazor
     {
         public BlazorCanvas(Canvas2DContext surface, long width, long height)
         {
+            LayoutLock = new ReaderWriterLockSlim();
             Surface = surface;
             Width = (int)width;
             Height = (int)height;
@@ -100,15 +101,24 @@ namespace Utilities.Blazor
 
         public Task SuspendLayout()
         {
+            // acquire the layout lock (only 1 writer)
+            LayoutLock.EnterWriteLock();
+
+            // start the batch processing
             return Surface.BeginBatchAsync();
         }
 
         public Task ResumeLayout()
         {
+            // release the layout lock
+            LayoutLock.ExitWriteLock();
+
+            // end batch processing
             return Surface.EndBatchAsync();
         }
 
         #region private
+        private ReaderWriterLockSlim LayoutLock;
         private Canvas2DContext Surface;
         private Dictionary<int, string> Colors;
 

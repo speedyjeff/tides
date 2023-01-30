@@ -106,7 +106,7 @@ sh> chmod +x publish/tidalclock.server
 
 #### Run tidal clock
 ```
-sh> cd /home/tides
+sh> cd /home/tides/publish
 sh> ./launch.sh
 OR
 sh> ./tidalclock.server &
