@@ -118,9 +118,9 @@ namespace wintideclock
 				var wratio = ((float)Width / (float)1024);
 				var hratio = ((float)Height / (float)600);
 
-				try
+                TideClockImage.Canvas.SuspendLayout();
+                try
 				{
-					TideClockImage.Canvas.SuspendLayout();
 					Canvas.DrawImage(TideClockImage.UnderlyingImage, new Rectangle()
 					{
 						X = 0,
@@ -134,9 +134,9 @@ namespace wintideclock
 					TideClockImage.Canvas.ResumeLayout();
 				}
 
-				try
+                DigitalClockImage.Canvas.SuspendLayout();
+                try
 				{
-					DigitalClockImage.Canvas.SuspendLayout();
 					Canvas.DrawImage(DigitalClockImage.UnderlyingImage, new Rectangle()
 					{
 						X = (int)(((524f / 2f) - (200f/2f)) * wratio),
@@ -150,9 +150,9 @@ namespace wintideclock
 					DigitalClockImage.Canvas.ResumeLayout();
 				}
 
-				try
+                DetailListImage.Canvas.SuspendLayout();
+                try
 				{
-					DetailListImage.Canvas.SuspendLayout();
 					Canvas.DrawImage(DetailListImage.UnderlyingImage, new Rectangle()
 					{
 						X = (int)(524 * wratio),
@@ -166,9 +166,9 @@ namespace wintideclock
 					DetailListImage.Canvas.ResumeLayout();
 				}
 
-				try
+                WeatherListImage.Canvas.SuspendLayout();
+                try
 				{
-					WeatherListImage.Canvas.SuspendLayout();
 					dimension = Width - midpoint;
 					Canvas.DrawImage(WeatherListImage.UnderlyingImage, new Rectangle()
 					{

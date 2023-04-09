@@ -92,10 +92,9 @@ namespace Clockface
 			// flip the sign of min to bring to 0
 			min *= -1;
 
-			try
+            Canvas.SuspendLayout();
+            try
 			{
-				await Canvas.SuspendLayout();
-
 				// clear
 				Canvas.Clear(RGBA.Black);
 
@@ -174,7 +173,7 @@ namespace Clockface
 			}
 			finally
 			{
-				await Canvas.ResumeLayout();
+				Canvas.ResumeLayout();
 			}
 
 			// fire that the frame is done

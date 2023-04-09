@@ -69,10 +69,9 @@ namespace Clockface
 			var point = new Point() { X = 0f, Y = 0f };
 			var avoiddups = new HashSet<string>();
 
-			try
+            Canvas.SuspendLayout();
+            try
 			{
-				await Canvas.SuspendLayout();
-
 				// clear
 				Canvas.Clear(RGBA.Black);
 
@@ -222,7 +221,7 @@ namespace Clockface
 			}
 			finally
 			{
-				await Canvas.ResumeLayout();
+				Canvas.ResumeLayout();
 			}
 
 			// fire that the frame is done

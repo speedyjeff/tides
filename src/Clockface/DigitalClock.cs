@@ -51,9 +51,9 @@ namespace Clockface
 				now.Minute != PreviousTime.Minute ||
 				(HasSeconds && now.Second != PreviousTime.Second))
 			{
-				try
+                Canvas.SuspendLayout();
+                try
 				{
-					await Canvas.SuspendLayout();
 					Canvas.Clear(RGBA.Black);
 
 					if (UseDigitalClockFace)
@@ -102,7 +102,7 @@ namespace Clockface
 				}
 				finally
 				{
-					await Canvas.ResumeLayout();
+					Canvas.ResumeLayout();
 				}
 
 				if (OnRendered != null) OnRendered();

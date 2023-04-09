@@ -29,24 +29,11 @@ namespace Acurite
             if (Listening) return;
 
             // initialize
-            var host = ListenLocal ? Dns.GetHostEntry("localhost") : Dns.GetHostEntry(Dns.GetHostName());
-            IPAddress ip = null;
+            var ip = GetIpAddress(ListenLocal);
+            if (ip == null) throw new Exception("failed to get an appropriate local ip address");
             Listening = true;
 
-            // choose appropriate ip address
-            foreach (var lip in host.AddressList)
-            {
-                // ipv4
-                if (lip.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    ip = lip;
-                    break;
-                }
-            }
-            if (ip == null && host.AddressList.Length >= 1) ip = host.AddressList[0];
-            if (ip == null) throw new Exception("Failed to get an ip address to listen too");
-
-            // start http lisenter
+            // start http listener
             var endpoint = new IPEndPoint(ip, Port);
             var url = $"{Protocol}://{endpoint}/{ServiceName}/";
             Http = new HttpListener();
@@ -120,6 +107,35 @@ namespace Acurite
         private string Protocol;
         private volatile bool Listening = false;
         private const string ServiceName = "weather";
+
+        private IPAddress GetIpAddress(bool local)
+        {
+            var host = local ? Dns.GetHostEntry("localhost") : Dns.GetHostEntry(Dns.GetHostName());
+            IPAddress ip = null;
+
+            // choose appropriate ip address
+            foreach (var lip in host.AddressList)
+            {
+                // ipv4
+                if (lip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    ip = lip;
+                    break;
+                }
+            }
+            if (ip == null && host.AddressList.Length >= 1) ip = host.AddressList[0];
+            if (ip == null) return null;
+
+            // check if loopback
+            var straddr = ip.ToString();
+            var isloopback = IPAddress.IsLoopback(ip) || String.IsNullOrWhiteSpace(straddr) || straddr.StartsWith("127.");
+
+            // check to see if wanting an externally visible ip address but only got loopback
+            if (!local && isloopback) return null;
+
+            // success
+            return ip;
+        }
 
         private async Task<string> GetWebJson(string url)
         {

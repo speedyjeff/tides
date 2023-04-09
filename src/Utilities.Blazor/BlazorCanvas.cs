@@ -8,7 +8,7 @@ namespace Utilities.Blazor
     {
         public BlazorCanvas(Canvas2DContext surface, long width, long height)
         {
-            LayoutLock = new ReaderWriterLockSlim();
+            LayoutLock = new Semaphore(initialCount: 1, maximumCount: 1);
             Surface = surface;
             Width = (int)width;
             Height = (int)height;
@@ -99,26 +99,26 @@ namespace Utilities.Blazor
             await Surface.FillTextAsync(text, topleft.X, topleft.Y + fontsize);
         }
 
-        public Task SuspendLayout()
+        public async void SuspendLayout()
         {
             // acquire the layout lock (only 1 writer)
-            LayoutLock.EnterWriteLock();
+            LayoutLock.WaitOne();
 
             // start the batch processing
-            return Surface.BeginBatchAsync();
+            await Surface.BeginBatchAsync();
         }
 
-        public Task ResumeLayout()
+        public async void ResumeLayout()
         {
-            // release the layout lock
-            LayoutLock.ExitWriteLock();
-
             // end batch processing
-            return Surface.EndBatchAsync();
+            await Surface.EndBatchAsync();
+
+            // release the layout lock
+            LayoutLock.Release();
         }
 
         #region private
-        private ReaderWriterLockSlim LayoutLock;
+        private Semaphore LayoutLock;
         private Canvas2DContext Surface;
         private Dictionary<int, string> Colors;
 

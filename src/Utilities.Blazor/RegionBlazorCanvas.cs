@@ -62,14 +62,14 @@ namespace Utilities.Blazor
             Canvas.Text(color, rtopleft, text, fontsize, fontname);
         }
 
-        public Task SuspendLayout()
+        public void SuspendLayout()
         {
-            return Canvas.SuspendLayout();
+            Canvas.SuspendLayout();
         }
 
-        public Task ResumeLayout()
+        public void ResumeLayout()
         {
-            return Canvas.ResumeLayout();
+            Canvas.ResumeLayout();
         }
 
         #region private

@@ -58,7 +58,7 @@ sh> vi /home/tides/launch.sh
   dt=$(date)
   echo $dt $HOSTNAME > log
   unclutter -idle 1 -root &
-  ./tidalclock.server >> log &
+  ./tidalclock.server >> log 2> log.err &
   sleep 5
   ps -aux | grep -i server >> log
   firefox http://localhost:5000 &
