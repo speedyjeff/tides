@@ -97,16 +97,14 @@ namespace wintideclock
 			Graphics.DrawString(text, GetCachedFont(fontname, fontsize), GetCachedSolidBrush(color), topleft.X, topleft.Y);
 		}
 
-		public Task SuspendLayout()
+		public void SuspendLayout()
         {
 			LayoutLock.EnterWriteLock();
-			return Task.CompletedTask;
 		}
 
-		public Task ResumeLayout()
+		public void ResumeLayout()
         {
 			LayoutLock.ExitWriteLock();
-			return Task.CompletedTask;
 		}
 
 		#region private
